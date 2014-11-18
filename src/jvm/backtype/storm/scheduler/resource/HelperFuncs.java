@@ -13,6 +13,7 @@ import java.util.TreeMap;
 import backtype.storm.Config;
 import backtype.storm.generated.ClusterSummary;
 import backtype.storm.generated.Nimbus;
+import backtype.storm.generated.NotAliveException;
 import backtype.storm.generated.TopologySummary;
 import backtype.storm.scheduler.Cluster;
 import backtype.storm.scheduler.ExecutorDetails;
@@ -284,5 +285,23 @@ public class HelperFuncs {
 		} catch (IOException ex) {
 			LOG.info("error! writin to file {}", ex);
 		}
+	}
+	
+	public static void setTopoStatus(String topoId, String status) {
+		TSocket tsocket = new TSocket("localhost", 6627);
+		TFramedTransport tTransport = new TFramedTransport(tsocket);
+		TBinaryProtocol tBinaryProtocol = new TBinaryProtocol(tTransport);
+		Nimbus.Client client = new Nimbus.Client(tBinaryProtocol);
+		
+		try {
+			tTransport.open();
+			client.getTopologyInfo(topoId).set_status(status);
+		} catch (TException e) {
+			e.printStackTrace();
+		} catch (NotAliveException e) {
+			e.printStackTrace();
+			LOG.error(e.toString());
+		}
+		
 	}
 }

@@ -311,6 +311,7 @@ public class GetStats {
 			}
 		} catch (TException e) {
 			e.printStackTrace();
+			LOG.error(e.toString());
 		}
 	}
 
