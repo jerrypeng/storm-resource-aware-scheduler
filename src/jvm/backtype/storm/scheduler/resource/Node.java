@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import backtype.storm.scheduler.Cluster;
 import backtype.storm.scheduler.ExecutorDetails;
+import backtype.storm.scheduler.Globals;
 import backtype.storm.scheduler.SchedulerAssignment;
 import backtype.storm.scheduler.SupervisorDetails;
 import backtype.storm.scheduler.WorkerSlot;
