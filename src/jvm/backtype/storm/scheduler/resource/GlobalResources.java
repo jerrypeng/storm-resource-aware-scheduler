@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import backtype.storm.scheduler.ExecutorDetails;
+import backtype.storm.scheduler.Globals;
 import backtype.storm.scheduler.Topologies;
 
 /**
