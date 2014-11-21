@@ -3,6 +3,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -303,5 +305,15 @@ public class HelperFuncs {
 			LOG.error(e.toString());
 		}
 		
+	}
+	public static String hostnameToCanonicalName(String hostname) {
+		String retVal=null;
+		try {
+			InetAddress inetAddress = InetAddress.getByName(hostname);
+			retVal = inetAddress.getCanonicalHostName();
+		} catch (UnknownHostException e) {
+			LOG.error(e.toString());
+		}
+		return retVal;
 	}
 }
