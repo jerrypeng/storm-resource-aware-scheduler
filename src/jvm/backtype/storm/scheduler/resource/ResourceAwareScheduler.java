@@ -11,6 +11,7 @@ import backtype.storm.scheduler.ExecutorDetails;
 import backtype.storm.scheduler.IScheduler;
 import backtype.storm.scheduler.Topologies;
 import backtype.storm.scheduler.TopologyDetails;
+import backtype.storm.scheduler.resource.Strategies.ResourceAwareStrategy;
 
 public class ResourceAwareScheduler implements IScheduler {
 	private static final Logger LOG = LoggerFactory
@@ -27,7 +28,7 @@ public class ResourceAwareScheduler implements IScheduler {
 	public void schedule(Topologies topologies, Cluster cluster) {
 		LOG.info("\n\n\nRerunning ResourceAwareScheduler...");
 
-		GlobalResources globalResources = new GlobalResources(topologies);
+		GlobalResources globalResources = new GlobalResources(cluster, topologies);
 		GlobalState globalState = GlobalState.getInstance("ResourceAwareScheduer");
 		globalState.updateInfo(cluster, topologies, globalResources);
 		
@@ -40,8 +41,6 @@ public class ResourceAwareScheduler implements IScheduler {
 	}
 	
 	public void resourceAwareScheduling(Topologies topos, Cluster cluster, GlobalState globalState, GlobalResources globalResources) {
-		R_Scheduler resource_aware_scheduler =
-	        new R_Scheduler(cluster, globalState, globalResources);
 	    for (TopologyDetails td : topos.getTopologies()) {
 	      String topId = td.getId();
 	      Map<Node, Collection<ExecutorDetails>> taskToNodesMap;
@@ -55,8 +54,11 @@ public class ResourceAwareScheduler implements IScheduler {
 	            totalTasks, executorsNotRunning);
 	        LOG.info("executors that need scheduling: {}",
 	            cluster.getUnassignedExecutors(td));
-	        taskToNodesMap = resource_aware_scheduler.schedule(td,
+	        
+	        ResourceAwareStrategy rs = new ResourceAwareStrategy(globalState, globalResources, null, td, cluster, topos);
+	        taskToNodesMap = rs.schedule(td,
 	            cluster.getUnassignedExecutors(td));
+	        
 	        if (taskToNodesMap != null) {
 	          try {
 	            for (Map.Entry<Node, Collection<ExecutorDetails>> entry :

@@ -477,14 +477,4 @@ public class Node {
     this.consumeCPU(taskCpuReq);
     this.consumeMemory(taskMemReq);
   }
-  /**
-   * Used to sort a list of nodes so the node with the most free slots comes
-   * first.
-   */
-  public static final Comparator<Node> FREE_NODE_COMPARATOR_DEC = new Comparator<Node>() {
-    @Override
-    public int compare(Node o1, Node o2) {
-      return o2.totalSlotsFree() - o1.totalSlotsFree();
-    }
-  };
 }

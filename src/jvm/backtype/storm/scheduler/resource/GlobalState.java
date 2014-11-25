@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
@@ -46,8 +47,7 @@ public class GlobalState {
 	public Map<String, Integer> topoWorkers = new HashMap<String, Integer>();
 
 	
-	//edge and throughput
-	public TreeMap<List<Component>, Integer> edgeThroughput;
+	public Map<String, List<String>> clusteringInfo;
 	
 	private File scheduling_log;
 	
@@ -56,6 +56,7 @@ public class GlobalState {
 	private GlobalState(String filename) {
 		this.schedState = new HashMap<String, Map<WorkerSlot, List<ExecutorDetails>>>();
 		this.scheduling_log = new File(Config.LOG_PATH + filename + "_SchedulingInfo");
+		this.clusteringInfo = (new GetNetworkInfo()).clusteringInfo;
 		try {
 			this.scheduling_log.delete();
 		} catch (Exception e) {
@@ -235,8 +236,9 @@ public class GlobalState {
 				str+="-->Component: "+comp.getValue().id+"=="+entry.getKey()+"\n";
 				str+="--->Parents: "+comp.getValue().parents+"\n";
 				str+="--->Children: "+comp.getValue().children+"\n";
-				str+="--->execs: " + comp.getValue().execs+"\n";
+				str+="--->execs: " + comp.getValue().execs+"\n\n";
 			}
+			str+="\n";
 		}
 		return str;
 	}
@@ -250,7 +252,18 @@ public class GlobalState {
 			str+="->WorkerToExec: \n";
 			for(Map.Entry<WorkerSlot, List<ExecutorDetails>> entry : n.getValue().slot_to_exec.entrySet()) {
 				str+="-->"+entry.getKey().getPort()+" => "+entry.getValue()+"\n";
-			}	
+			}
+		str+="\n";
+		}
+		return str;
+	}
+	
+	public String ClusterInfoToString() {
+		String str = "";
+		str+="\n!--ClusterInfo--! \n";
+		for(Entry<String, List<String>> entry : this.clusteringInfo.entrySet()) {
+			str+="\n->Cluster "+entry.getKey()+"\n";
+			str+="-->nodes: "+entry.getValue().toString()+"\n";
 		}
 		return str;
 	}
@@ -262,8 +275,9 @@ public class GlobalState {
 			str+="->Topology: "+entry.getKey()+"\n";
 			for(Map.Entry<WorkerSlot, List<ExecutorDetails>> sched : entry.getValue().entrySet()) {
 				str+="-->WorkerSlot: "+sched.getKey().getNodeId()+":"+sched.getKey().getNodeId()+"\n";
-				str+=sched.getValue()+"\n";
+				str+=sched.getValue()+"\n\n";
 			}
+			str+="\n";
 		}
 		return str;
 	}

@@ -6,9 +6,11 @@ import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import backtype.storm.scheduler.Cluster;
 import backtype.storm.scheduler.ExecutorDetails;
 import backtype.storm.scheduler.Globals;
 import backtype.storm.scheduler.Topologies;
+import backtype.storm.scheduler.TopologyDetails;
 
 /**
  * A storage class for All topology resource requirements.
@@ -34,11 +36,43 @@ public class GlobalResources {
    * constructor of this class.
    * @param topologies a list of topologies.
    */
-  public GlobalResources(Topologies topologies) {
-    _globalResourceList = topologies.getGlobalResourceReqList();
+  public GlobalResources(Cluster cluster, Topologies topologies) {
+    this.getGlobalResourceList(cluster, topologies);
+    
     if (_globalResourceList == null) {
       _globalResourceList = new HashMap<String, Map<ExecutorDetails, Map<String, Map<String, Double>>>>();
     }
+  }
+  
+  public void getGlobalResourceList(Cluster cluster, Topologies topologies) {
+		this._globalResourceList = topologies.getGlobalResourceReqList();
+		for (TopologyDetails td : topologies.getTopologies()) {
+			for (ExecutorDetails exec : cluster.getUnassignedExecutors(td)) {
+				if (!this.hasExecInTopo(td.getId(), exec)) {
+					if (td.getExecutorToComponent().get(exec)
+							.compareTo("__acker") == 0) {
+						LOG.warn(
+								"Scheduling __acker {} with memory requirement as {} - {} and {} - {} and CPU requirement as {}-{}",
+								new Object[] {
+										exec,
+										Globals.TYPE_MEMORY_ONHEAP,
+										Globals.DEFAULT_ONHEAP_MEMORY_REQUIREMENT,
+										Globals.TYPE_MEMORY_OFFHEAP,
+										Globals.DEFAULT_OFFHEAP_MEMORY_REQUIREMENT,
+										Globals.TYPE_CPU_TOTAL,
+										Globals.DEFAULT_CPU_REQUIREMENT });
+						this.addExecutorResourceReqDefault(
+								exec, td.getId());
+					} else {
+						LOG.warn(
+								"Executor {} of Component: {} does not have a set memory resource requirement!",
+								exec, td.getExecutorToComponent().get(exec));
+						this.addExecutorResourceReqDefault(
+								exec, td.getId());
+					}
+				}
+			}
+	  }
   }
 
   /**
