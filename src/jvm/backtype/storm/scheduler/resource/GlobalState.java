@@ -162,6 +162,30 @@ public class GlobalState {
 	
 	private Map<String, Node> getNodes(Cluster cluster, GlobalResources globalResources) {
 		Map<String, Node> retVal = Node.getAllNodesFrom(cluster, globalResources);
+		for (Map.Entry<String, SchedulerAssignment> entry : cluster
+				.getAssignments().entrySet()) {
+			for (Map.Entry<ExecutorDetails, WorkerSlot> exec : entry.getValue()
+					.getExecutorToSlot().entrySet()) {
+				if (retVal.containsKey(exec.getValue().getNodeId()) == true) {
+					if (retVal.get(exec.getValue().getNodeId()).slot_to_exec
+							.containsKey(exec.getValue()) == true) {
+						retVal.get(exec.getValue().getNodeId()).slot_to_exec
+								.get(exec.getValue()).add(exec.getKey());
+						retVal.get(exec.getValue().getNodeId()).execs.add(exec
+								.getKey());
+					} else {
+						LOG.info(
+								"ERROR: should have node {} should have worker: {}",
+								exec.getValue().getNodeId(), exec.getValue());
+						return null;
+					}
+				} else {
+					LOG.info("ERROR: should have node {}", exec.getValue()
+							.getNodeId());
+					return null;
+				}
+			}
+		}
 		
 		return retVal;
 	}
