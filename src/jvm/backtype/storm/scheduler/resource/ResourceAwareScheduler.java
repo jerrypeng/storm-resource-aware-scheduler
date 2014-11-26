@@ -37,7 +37,7 @@ public class ResourceAwareScheduler implements IScheduler {
 		resourceAwareScheduling(topologies, cluster, globalState, globalResources);
 		
 		
-		LOG.info("GlobalResources:\n{}", globalResources);
+		LOG.info("GlobalState:\n{}", globalState);
 		Map<String, Node> nodeIdToNode = Node.getAllNodesFrom(cluster,
 				globalResources);
 		LOG.info("GlobalResources: \n{}\n", globalResources);
