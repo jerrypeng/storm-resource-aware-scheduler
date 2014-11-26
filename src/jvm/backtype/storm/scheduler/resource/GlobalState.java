@@ -288,6 +288,7 @@ public class GlobalState {
 		str+=this.NodesToString();
 		str+=this.ComponentsToString();
 		str+=this.StoredStateToString();
+		str+=this.ClusterInfoToString();
 		str+="\n topWorkers: "+ this.topoWorkers+"\n";
 		
 		return str;
