@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
@@ -29,6 +32,12 @@ public class ResourceAwareStrategy implements IStrategy {
 	protected Topologies _topologies;
 	protected TopologyDetails _topo;
 	protected Collection<Node> _availNodes;
+	protected Node refNode=null;
+	
+	private final Double CPU_WEIGHT = 1.0;
+	private final Double MEM_WEIGHT = 1.0;
+	private final Double NETWORK_WEIGHT = 1.0;
+	
 
 	public ResourceAwareStrategy(GlobalState globalState,
 			GlobalResources globalResources, GetStats getStats,
@@ -48,46 +57,6 @@ public class ResourceAwareStrategy implements IStrategy {
 		LOG.info("Clustering info: {}", this._globalState.clusteringInfo);
 	}
 
-	protected Node strategy(Collection<Node> NodeMap, String topoId,
-			ExecutorDetails exec) {
-		Double taskMem = this._globalResources.getTotalMemReqTask(topoId, exec);
-		Double taskCPU = this._globalResources.getTotalCpuReqTask(topoId, exec);
-		Double shortestDistance = Double.POSITIVE_INFINITY;
-		String msg = "";
-		LOG.info("exec: {} taskMem: {} taskCPU: {}", new Object[] { exec,
-				taskMem, taskCPU });
-		Node closestNode = null;
-		LOG.info("NodeMap.size: {}", NodeMap.size());
-		LOG.info("NodeMap: {}", NodeMap);
-		for (Node n : NodeMap) {
-			if (n.getAvailableMemoryResources() >= taskMem
-					&& n.getAvailableCpuResources() >= taskCPU
-					&& n.totalSlotsFree() > 0) {
-				Double distance = Math
-						.sqrt(Math.pow(
-								(taskMem - n.getAvailableMemoryResources()), 2)
-								+ Math.pow(
-										(taskCPU - n.getAvailableCpuResources()),
-										2));
-				msg = msg + "{" + n.getId() + "-" + distance.toString() + "}";
-				if (distance < shortestDistance) {
-					closestNode = n;
-					shortestDistance = distance;
-				}
-			}
-		}
-		if (closestNode != null) {
-			LOG.info(msg);
-			LOG.info("node: {} distance: {}", closestNode, shortestDistance);
-			LOG.info("node availMem: {}",
-					closestNode.getAvailableMemoryResources());
-			LOG.info("node availCPU: {}",
-					closestNode.getAvailableCpuResources());
-		}
-		return closestNode;
-
-	}
-
 	public Map<Node, Collection<ExecutorDetails>> schedule(TopologyDetails td,
 			Collection<ExecutorDetails> unassignedExecutors) {
 		if (this._availNodes.size() <= 0) {
@@ -100,7 +69,7 @@ public class ResourceAwareStrategy implements IStrategy {
 		Collection<ExecutorDetails> scheduledTasks = new ArrayList<ExecutorDetails>();
 		for (ExecutorDetails exec : unassignedExecutors) {
 			LOG.info("\n\nAttempting to schedule: {}", exec);
-			Node n = this.getBestNode(this._availNodes, td.getId(), exec);
+			Node n = this.getNode(exec);
 			if (n != null) {
 				if (taskToNodeMap.containsKey(n) == false) {
 					Collection<ExecutorDetails> newMap = new LinkedList<ExecutorDetails>();
@@ -137,14 +106,161 @@ public class ResourceAwareStrategy implements IStrategy {
 
 		return taskToNodeMap;
 	}
+	
+	public String getBestCluster() {
+		String bestCluster=null;
+		Double mostRes=0.0;
+		for (Entry<String, List<String>> cluster : this._globalState.clusteringInfo.entrySet()) {
+			Double clusterTotalRes = getTotalClusterRes(cluster.getValue());
+			if(clusterTotalRes > mostRes) {
+				mostRes = clusterTotalRes;
+				bestCluster = cluster.getKey();
+			}
+		}
+		return bestCluster;
+	}
+	
+	public Double getTotalClusterRes(List<String> cluster) {
+		Double res = 0.0;
+		for(String node : cluster) {
+			res += this._globalState.nodes.get(node).getAvailableMemoryResources() + this._globalState.nodes.get(node).getAvailableMemoryResources();
+		}
+		return res;
+	}
 
-	public Node getBestNode(Collection<Node> NodeMap, String topoId,
-			ExecutorDetails exec) {
-		return strategy(NodeMap, topoId, exec);
+	public Node getNode(ExecutorDetails exec) {
+		//first scheduling
+		Node n=null;
+		if(this.refNode==null) {
+			String clus = this.getBestCluster();
+			n = this.getBestNodeInCluster_Mem_CPU(clus, exec);
+			this.refNode = n;
+		} else {
+			n =this.getBestNode(exec);
+		}
+		
+		return n;
+	}
+	
+	public Node getBestNode (ExecutorDetails exec) {
+		Double taskMem = this._globalResources.getTotalMemReqTask(this._topo.getId(), exec);
+		Double taskCPU = this._globalResources.getTotalCpuReqTask(this._topo.getId(), exec);
+		Double shortestDistance = Double.POSITIVE_INFINITY;
+		Node closestNode = null;
+		for(Node n : this._availNodes) {
+			//hard constraint
+			if(n.getAvailableMemoryResources() >= taskMem) {
+				Double a = Math.pow((taskCPU-n.getAvailableCpuResources()) * this.CPU_WEIGHT, 2);
+				Double b = Math.pow((taskMem-n.getAvailableMemoryResources()) * this.MEM_WEIGHT, 2);
+				Double c = Math.pow(this.distToNode(this.refNode, n) * this.NETWORK_WEIGHT, 2);
+				Double distance = Math.sqrt(a + b +c );
+				if(shortestDistance > distance) {
+					shortestDistance = distance;
+					closestNode = n;
+				}
+			}
+		}
+		return closestNode; 
+	}
+	
+	
+	Double distToNode(Node src, Node dest) {
+		if(this.NodeToCluster(src)==this.NodeToCluster(dest)) {
+			return 1.0 * this.NETWORK_WEIGHT;
+		} else {
+			return 2.0 * this.NETWORK_WEIGHT;
+		}
+	}
+	
+	public String NodeToCluster(Node src) {
+		for(Entry<String, List<String>> entry : this._globalState.clusteringInfo.entrySet()) {
+			if(entry.getValue().contains(src.getId())) {
+				return entry.getKey();
+			}
+		}
+		LOG.error("Node: {} not found in any clusters", src.getId());
+		return null;
+	}
+	
+	public List<Node> getNodesFromCluster(String clus) {
+		List<Node> retList = new ArrayList<Node>();
+		for(String node_id : this._globalState.clusteringInfo.get(clus)) {
+			retList.add(this._globalState.nodes.get(node_id));
+		}
+		return retList;
+	}
+	
+	public Node getBestNodeInCluster_Mem_CPU(String clus, ExecutorDetails exec) {
+		Double taskMem = this._globalResources.getTotalMemReqTask(this._topo.getId(), exec);
+		Double taskCPU = this._globalResources.getTotalCpuReqTask(this._topo.getId(), exec);
+		Collection<Node> NodeMap = this.getNodesFromCluster(clus);
+		Double shortestDistance = Double.POSITIVE_INFINITY;
+		String msg = "";
+		LOG.info("exec: {} taskMem: {} taskCPU: {}", new Object[] { exec,
+				taskMem, taskCPU });
+		Node closestNode = null;
+		LOG.info("NodeMap.size: {}", NodeMap.size());
+		LOG.info("NodeMap: {}", NodeMap);
+		for (Node n : NodeMap) {
+			if (n.getAvailableMemoryResources() >= taskMem
+					&& n.getAvailableCpuResources() >= taskCPU
+					&& n.totalSlotsFree() > 0) {
+				Double distance = Math
+						.sqrt(Math.pow(
+								(taskMem - n.getAvailableMemoryResources()), 2)
+								+ Math.pow(
+										(taskCPU - n.getAvailableCpuResources()),
+										2));
+				msg = msg + "{" + n.getId() + "-" + distance.toString() + "}";
+				if (distance < shortestDistance) {
+					closestNode = n;
+					shortestDistance = distance;
+				}
+			}
+		}
+		if (closestNode != null) {
+			LOG.info(msg);
+			LOG.info("node: {} distance: {}", closestNode, shortestDistance);
+			LOG.info("node availMem: {}",
+					closestNode.getAvailableMemoryResources());
+			LOG.info("node availCPU: {}",
+					closestNode.getAvailableCpuResources());
+		}
+		return closestNode;
 	}
 
 	protected Collection<Node> getAvaiNodes() {
 		return this._globalState.nodes.values();
+	}
+	
+	public void bfs(Component root, HashMap<String, Component> visited) {
+		// Since queue is a interface
+		Queue<Component> queue = new LinkedList<Component>();
+
+		if (root == null)
+			return;
+
+		visited.put(root.id, root);
+		// Adds to end of queue
+		queue.add(root);
+
+		while (!queue.isEmpty()) {
+			// removes from front of queue
+			Component r = queue.remove();
+			
+			//System.out.print(r.getVertex() + "\t");
+
+			// Visit child first before grandchild
+			for(String comp : r.children) {
+				if(visited.containsKey(comp) == false) {
+					Component child = this._globalState.components.get(this._topo.getId()).get(comp);
+					queue.add(child);
+					visited.put(child.id, child);
+				}
+			}
+	
+		}
+
 	}
 
 }
