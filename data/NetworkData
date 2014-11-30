@@ -6,7 +6,6 @@
       {
         "cluster": "1",
         "nodes": [
-          "node-1.stormcluster.storm.emulab.net",
           "node-2.stormcluster.storm.emulab.net",
           "node-3.stormcluster.storm.emulab.net",
           "node-4.stormcluster.storm.emulab.net"
@@ -18,7 +17,6 @@
           "node-5.stormcluster.storm.emulab.net",
           "node-6.stormcluster.storm.emulab.net",
           "node-7.stormcluster.storm.emulab.net",
-          "node-8.stormcluster.storm.emulab.net"
         ]
       }
     ]
