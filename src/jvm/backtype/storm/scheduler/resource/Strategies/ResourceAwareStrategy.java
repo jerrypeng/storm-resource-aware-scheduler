@@ -67,27 +67,38 @@ public class ResourceAwareStrategy implements IStrategy {
 		Map<Node, Collection<ExecutorDetails>> taskToNodeMap = new HashMap<Node, Collection<ExecutorDetails>>();
 		LOG.debug("ExecutorsNeedScheduling: {}", unassignedExecutors);
 		Collection<ExecutorDetails> scheduledTasks = new ArrayList<ExecutorDetails>();
-		for (ExecutorDetails exec : unassignedExecutors) {
-			LOG.info("\n\nAttempting to schedule: {}", exec);
-			Node n = this.getNode(exec);
-			if (n != null) {
-				if (taskToNodeMap.containsKey(n) == false) {
-					Collection<ExecutorDetails> newMap = new LinkedList<ExecutorDetails>();
-					taskToNodeMap.put(n, newMap);
+		Component root = this.getSpout();
+		if(root == null) {
+			LOG.error("Cannot find a Spout!");
+			return null;
+		}
+		Queue<Component> comps = this.bfs(root);
+		LOG.info("PriorityQueue: {}", comps);
+		for(Component comp : comps) {
+			LOG.info("Scheduling component: {}", comp.id);
+			for(ExecutorDetails exec : comp.execs){
+				LOG.info("\n\nAttempting to schedule: {}", exec);
+				Node n = this.getNode(exec);
+				if (n != null) {
+					if (taskToNodeMap.containsKey(n) == false) {
+						Collection<ExecutorDetails> newMap = new LinkedList<ExecutorDetails>();
+						taskToNodeMap.put(n, newMap);
+					}
+					taskToNodeMap.get(n).add(exec);
+					n.consumeResourcesforTask(exec, td.getId(),
+							this._globalResources);
+					scheduledTasks.add(exec);
+					LOG.info(
+							"TASK {} assigned to NODE {} -- AvailMem: {} AvailCPU: {}",
+							new Object[] { exec, n,
+									n.getAvailableMemoryResources(),
+									n.getAvailableCpuResources() });
+				} else {
+					LOG.error("Not Enough Resources to schedule Task {}", exec);
 				}
-				taskToNodeMap.get(n).add(exec);
-				n.consumeResourcesforTask(exec, td.getId(),
-						this._globalResources);
-				scheduledTasks.add(exec);
-				LOG.info(
-						"TASK {} assigned to NODE {} -- AvailMem: {} AvailCPU: {}",
-						new Object[] { exec, n,
-								n.getAvailableMemoryResources(),
-								n.getAvailableCpuResources() });
-			} else {
-				LOG.error("Not Enough Resources to schedule Task {}", exec);
 			}
 		}
+
 		Collection<ExecutorDetails> tasksNotScheduled = new ArrayList<ExecutorDetails>(
 				unassignedExecutors);
 		tasksNotScheduled.removeAll(scheduledTasks);
@@ -233,16 +244,20 @@ public class ResourceAwareStrategy implements IStrategy {
 		return this._globalState.nodes.values();
 	}
 	
-	public void bfs(Component root, HashMap<String, Component> visited) {
+	public Queue<Component> bfs(Component root) {
 		// Since queue is a interface
+		Queue<Component> retList = new LinkedList<Component>(); 
+		HashMap<String, Component> visited = new HashMap<String, Component>();
 		Queue<Component> queue = new LinkedList<Component>();
 
 		if (root == null)
-			return;
+			return null;
 
-		visited.put(root.id, root);
+		
 		// Adds to end of queue
 		queue.add(root);
+		visited.put(root.id, root);
+		retList.add(root);
 
 		while (!queue.isEmpty()) {
 			// removes from front of queue
@@ -256,11 +271,20 @@ public class ResourceAwareStrategy implements IStrategy {
 					Component child = this._globalState.components.get(this._topo.getId()).get(comp);
 					queue.add(child);
 					visited.put(child.id, child);
+					retList.add(child);
 				}
 			}
 	
 		}
-
+		return retList;
 	}
-
+	
+	public Component getSpout() {
+		for(Component c : this._globalState.components.get(this._topo.getId()).values()) {
+			if(c.type==Component.ComponentType.SPOUT) {
+				return c;
+			}
+		}
+		return null;
+	}
 }
