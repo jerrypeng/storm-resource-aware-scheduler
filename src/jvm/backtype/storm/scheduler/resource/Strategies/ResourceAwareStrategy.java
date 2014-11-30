@@ -143,6 +143,7 @@ public class ResourceAwareStrategy implements IStrategy {
 		//first scheduling
 		Node n=null;
 		if(this.refNode==null) {
+			LOG.info("refNode: {}", this.refNode.hostname);
 			String clus = this.getBestCluster();
 			n = this.getBestNodeInCluster_Mem_CPU(clus, exec);
 			this.refNode = n;
@@ -177,9 +178,9 @@ public class ResourceAwareStrategy implements IStrategy {
 	
 	Double distToNode(Node src, Node dest) {
 		if(this.NodeToCluster(src)==this.NodeToCluster(dest)) {
-			return 1.0 * this.NETWORK_WEIGHT;
+			return 1.0 ;
 		} else {
-			return 2.0 * this.NETWORK_WEIGHT;
+			return 2.0 ;
 		}
 	}
 	
