@@ -24,14 +24,13 @@ public class GetNetworkInfo {
 	Map<String, List<String>> clusteringInfo;
 
 	public GetNetworkInfo() {
-		this.networkDataFile = new File(Config.NETWORK_DATA_FILE);
 		this.clusteringInfo = new HashMap<String, List<String>>();
 	}
 
 	public Map<String, List<String>> getClusterInfo() {
 		try {
 			// read the json file
-			FileReader reader = new FileReader("NetworkData");
+			FileReader reader = new FileReader(Config.NETWORK_DATA_FILE);
 
 			JSONParser jsonParser = new JSONParser();
 			JSONObject jsonObject = (JSONObject) jsonParser.parse(reader);
@@ -60,23 +59,5 @@ public class GetNetworkInfo {
 			e.printStackTrace();
 		}
 		return this.clusteringInfo;
-	}
-
-	public String getNetworkData() {
-		String retVal = "";
-		try {
-			BufferedReader in = new BufferedReader(new FileReader(
-					Config.NETWORK_DATA_FILE));
-			String line = null;
-			while ((line = in.readLine()) != null) {
-				retVal += line;
-			}
-
-		} catch (FileNotFoundException e) {
-			LOG.error(e.toString());
-		} catch (IOException e) {
-			LOG.error(e.toString());
-		}
-		return retVal;
 	}
 }
