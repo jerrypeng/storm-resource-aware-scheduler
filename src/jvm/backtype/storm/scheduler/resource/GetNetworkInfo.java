@@ -28,7 +28,7 @@ public class GetNetworkInfo {
 		this.clusteringInfo = new HashMap<String, List<String>>();
 	}
 
-	public void getClusterInfo() {
+	public Map<String, List<String>> getClusterInfo() {
 		try {
 			// read the json file
 			FileReader reader = new FileReader("NetworkData");
@@ -59,6 +59,7 @@ public class GetNetworkInfo {
 			LOG.error(e.toString());
 			e.printStackTrace();
 		}
+		return this.clusteringInfo;
 	}
 
 	public String getNetworkData() {

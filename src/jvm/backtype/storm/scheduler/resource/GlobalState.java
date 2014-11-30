@@ -56,7 +56,7 @@ public class GlobalState {
 	private GlobalState(String filename) {
 		this.schedState = new HashMap<String, Map<WorkerSlot, List<ExecutorDetails>>>();
 		this.scheduling_log = new File(Config.LOG_PATH + filename + "_SchedulingInfo");
-		this.clusteringInfo = (new GetNetworkInfo()).clusteringInfo;
+		this.clusteringInfo = (new GetNetworkInfo()).getClusterInfo();
 		try {
 			this.scheduling_log.delete();
 		} catch (Exception e) {
