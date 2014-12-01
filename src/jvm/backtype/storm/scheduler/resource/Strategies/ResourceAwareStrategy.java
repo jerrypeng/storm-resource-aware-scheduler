@@ -23,6 +23,7 @@ import backtype.storm.scheduler.resource.GetStats;
 import backtype.storm.scheduler.resource.GlobalResources;
 import backtype.storm.scheduler.resource.GlobalState;
 import backtype.storm.scheduler.resource.Node;
+import bsh.This;
 
 public class ResourceAwareStrategy implements IStrategy {
 	protected Logger LOG = null;
@@ -224,7 +225,7 @@ public class ResourceAwareStrategy implements IStrategy {
 	public List<Node> getNodesFromCluster(String clus) {
 		List<Node> retList = new ArrayList<Node>();
 		for(String node_id : this._globalState.clusteringInfo.get(clus)) {
-			retList.add(this._globalState.nodes.get(node_id));
+			retList.add(this._globalState.nodes.get(this.NodeHostnameToId(node_id)));
 		}
 		return retList;
 	}
