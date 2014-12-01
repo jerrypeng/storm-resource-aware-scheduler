@@ -134,6 +134,7 @@ public class ResourceAwareStrategy implements IStrategy {
 	public Double getTotalClusterRes(List<String> cluster) {
 		Double res = 0.0;
 		for(String node : cluster) {
+			LOG.info("node: {}", node);
 			res += this._globalState.nodes.get(node).getAvailableMemoryResources() + this._globalState.nodes.get(node).getAvailableMemoryResources();
 		}
 		return res;
