@@ -53,11 +53,11 @@ public class Node {
       SupervisorDetails sup) {
 	  this(nodeId, allPorts, isAlive);
 	  this.sup = sup;
+	  LOG.info("sup-2: {}", sup);
 	  this.supervisor_id = sup.getId();
 	  this.availMemory = this.getTotalMemoryResources();
 	  this.availCPU = this.getTotalCpuResources();
 	  this.hostname = this.sup.getHost();
-	  this.supervisor_id = sup.getId();
 	  this.slots = new ArrayList<WorkerSlot>();
 	  this.slots.addAll(this._freeSlots);
 	  this.execs = new ArrayList<ExecutorDetails>();
@@ -291,9 +291,10 @@ public class Node {
     Map<String, Node> nodeIdToNode = new HashMap<String, Node>();
     for (SupervisorDetails sup : cluster.getSupervisors().values()) {
       //Node ID and supervisor ID are the same.
+    	LOG.info("sup-1: {}", sup);
       String id = sup.getId();
       boolean isAlive = !cluster.isBlackListed(id);
-      LOG.debug("Found a {} Node {} {}", 
+      LOG.info("Found a {} Node {} {}", 
           new Object[] {isAlive? "living":"dead", id, sup.getAllPorts()});
       nodeIdToNode.put(sup.getHost(), new Node(id, sup.getAllPorts(), isAlive, sup));
     }
