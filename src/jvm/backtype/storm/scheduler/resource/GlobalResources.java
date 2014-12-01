@@ -47,9 +47,9 @@ public class GlobalResources {
   public void getGlobalResourceList(Cluster cluster, Topologies topologies) {
 		this._globalResourceList = topologies.getGlobalResourceReqList();
 		for (TopologyDetails td : topologies.getTopologies()) {
-			LOG.info("cluster.getUnassignedExecutors(td): {}", cluster.getUnassignedExecutors(td));
+			//LOG.info("cluster.getUnassignedExecutors(td): {}", cluster.getUnassignedExecutors(td));
 			for (ExecutorDetails exec : cluster.getUnassignedExecutors(td)) {
-				LOG.info("exec: {} comp: {}", exec, td.getExecutorToComponent().get(exec));
+				//LOG.info("exec: {} comp: {}", exec, td.getExecutorToComponent().get(exec));
 				if (!this.hasExecInTopo(td.getId(), exec)) {
 					
 					if (td.getExecutorToComponent().get(exec)

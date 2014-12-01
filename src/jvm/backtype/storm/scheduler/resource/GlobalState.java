@@ -338,9 +338,9 @@ public class GlobalState {
 	}
 	public void checkResourceSet(Topologies topologies, GlobalResources globalResources, Cluster cluster) {
 		for (TopologyDetails td : topologies.getTopologies()) {
-			LOG.info("cluster.getUnassignedExecutors(td): {}", cluster.getUnassignedExecutors(td));
+			//LOG.info("cluster.getUnassignedExecutors(td): {}", cluster.getUnassignedExecutors(td));
 			for (ExecutorDetails exec : cluster.getUnassignedExecutors(td)) {
-				LOG.info("exec: {} comp: {}", exec, td.getExecutorToComponent().get(exec));
+				//LOG.info("exec: {} comp: {}", exec, td.getExecutorToComponent().get(exec));
 				if (!globalResources.hasExecInTopo(td.getId(), exec)) {
 					
 					if (td.getExecutorToComponent().get(exec)
