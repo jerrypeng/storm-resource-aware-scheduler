@@ -102,7 +102,31 @@ public class ResourceAwareStrategy implements IStrategy {
 		Collection<ExecutorDetails> tasksNotScheduled = new ArrayList<ExecutorDetails>(
 				unassignedExecutors);
 		tasksNotScheduled.removeAll(scheduledTasks);
+		//schedule left over system tasks
+		for(ExecutorDetails exec : tasksNotScheduled) {
+			Node n = this.getBestNode(exec);
+			if (n != null) {
+				if (taskToNodeMap.containsKey(n) == false) {
+					Collection<ExecutorDetails> newMap = new LinkedList<ExecutorDetails>();
+					taskToNodeMap.put(n, newMap);
+				}
+				taskToNodeMap.get(n).add(exec);
+				n.consumeResourcesforTask(exec, td.getId(),
+						this._globalResources);
+				scheduledTasks.add(exec);
+				LOG.info(
+						"TASK {} assigned to NODE {} -- AvailMem: {} AvailCPU: {}",
+						new Object[] { exec, n,
+								n.getAvailableMemoryResources(),
+								n.getAvailableCpuResources() });
+			} else {
+				LOG.error("Not Enough Resources to schedule Task {}", exec);
+			}
+		}
 
+		tasksNotScheduled  = new ArrayList<ExecutorDetails>(
+				unassignedExecutors);
+		tasksNotScheduled.removeAll(scheduledTasks);
 		if (tasksNotScheduled.size() > 0) {
 			LOG.error("Resources not successfully scheduled: {}",
 					tasksNotScheduled);
@@ -162,7 +186,7 @@ public class ResourceAwareStrategy implements IStrategy {
 		Node closestNode = null;
 		for(Node n : this._availNodes) {
 			//hard constraint
-			if(n.getAvailableMemoryResources() >= taskMem) {
+			if(n.getAvailableMemoryResources() >= taskMem && n.getAvailableCpuResources()>=taskCPU) {
 				Double a = Math.pow((taskCPU-n.getAvailableCpuResources()) * this.CPU_WEIGHT, 2);
 				Double b = Math.pow((taskMem-n.getAvailableMemoryResources()) * this.MEM_WEIGHT, 2);
 				Double c = Math.pow(this.distToNode(this.refNode, n) * this.NETWORK_WEIGHT, 2);
