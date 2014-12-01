@@ -330,7 +330,7 @@ public class Node {
       Node.updateAvailableResources(cluster,globalResources, nodeIdToNode);
     }
 
-    return nodeIdToNode;
+    return hostnameToNode;
   }
 
   /**
