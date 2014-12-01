@@ -143,10 +143,10 @@ public class ResourceAwareStrategy implements IStrategy {
 		//first scheduling
 		Node n=null;
 		if(this.refNode==null) {
-			LOG.info("refNode: {}", this.refNode.hostname);
 			String clus = this.getBestCluster();
 			n = this.getBestNodeInCluster_Mem_CPU(clus, exec);
 			this.refNode = n;
+			LOG.info("refNode: {}", this.refNode.hostname);
 		} else {
 			n =this.getBestNode(exec);
 		}
