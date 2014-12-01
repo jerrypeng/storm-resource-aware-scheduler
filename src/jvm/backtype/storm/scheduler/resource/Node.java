@@ -297,7 +297,7 @@ public class Node {
       //Node ID and supervisor ID are the same.
       String id = sup.getId();
       boolean isAlive = !cluster.isBlackListed(id);
-      LOG.info("Found a {} Node {} {}", 
+      LOG.debug("Found a {} Node {} {}", 
           new Object[] {isAlive? "living":"dead", id, sup.getAllPorts()});
       nodeIdToNode.put(sup.getId(), new Node(id, sup.getAllPorts(), isAlive, sup));
     }
@@ -308,7 +308,7 @@ public class Node {
         String id = ws.getNodeId();
         Node node = nodeIdToNode.get(id);
         if (node == null) {
-          LOG.info("Found an assigned slot on a dead supervisor {} with executors {}",
+          LOG.debug("Found an assigned slot on a dead supervisor {} with executors {}",
               ws, HelperFuncs.getExecutors(ws, cluster));
           node = new Node(id, null, false, null);
           nodeIdToNode.put(id, node);
