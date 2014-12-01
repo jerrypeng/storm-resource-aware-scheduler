@@ -3,6 +3,7 @@ package backtype.storm.scheduler.resource.Strategies;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -33,12 +34,11 @@ public class ResourceAwareStrategy implements IStrategy {
 	protected Topologies _topologies;
 	protected TopologyDetails _topo;
 	protected Collection<Node> _availNodes;
-	protected Node refNode=null;
-	
+	protected Node refNode = null;
+
 	private final Double CPU_WEIGHT = 1.0;
 	private final Double MEM_WEIGHT = 1.0;
 	private final Double NETWORK_WEIGHT = 1.0;
-	
 
 	public ResourceAwareStrategy(GlobalState globalState,
 			GlobalResources globalResources, GetStats getStats,
@@ -58,54 +58,103 @@ public class ResourceAwareStrategy implements IStrategy {
 		LOG.info("Clustering info: {}", this._globalState.clusteringInfo);
 	}
 
+	protected TreeMap<Integer, List<ExecutorDetails>> getCompToComponent(
+			Queue<Component> comps) {
+		TreeMap<Integer, List<ExecutorDetails>> retMap = new TreeMap<Integer, List<ExecutorDetails>>();
+		Integer rank = 0;
+		for (Component comp : comps) {
+			retMap.put(rank, new ArrayList<ExecutorDetails>());
+			retMap.get(rank).addAll(comp.execs);
+			rank++;
+		}
+		return retMap;
+	}
+
 	public Map<Node, Collection<ExecutorDetails>> schedule(TopologyDetails td,
 			Collection<ExecutorDetails> unassignedExecutors) {
 		if (this._availNodes.size() <= 0) {
 			LOG.warn("No available nodes to schedule tasks on!");
 			return null;
 		}
-		
 
 		Map<Node, Collection<ExecutorDetails>> taskToNodeMap = new HashMap<Node, Collection<ExecutorDetails>>();
 		LOG.debug("ExecutorsNeedScheduling: {}", unassignedExecutors);
 		Collection<ExecutorDetails> scheduledTasks = new ArrayList<ExecutorDetails>();
 		Component root = this.getSpout();
-		if(root == null) {
+		if (root == null) {
 			LOG.error("Cannot find a Spout!");
 			return null;
 		}
 		Queue<Component> comps = this.bfs(root);
 		LOG.info("PriorityQueue: {}", comps);
-		for(Component comp : comps) {
-			LOG.info("Scheduling component: {}", comp.id);
-			for(ExecutorDetails exec : comp.execs){
-				LOG.info("\n\nAttempting to schedule: {}", exec);
-				Node n = this.getNode(exec);
-				if (n != null) {
-					if (taskToNodeMap.containsKey(n) == false) {
-						Collection<ExecutorDetails> newMap = new LinkedList<ExecutorDetails>();
-						taskToNodeMap.put(n, newMap);
+		TreeMap<Integer, List<ExecutorDetails>> taskPriority = this
+				.getCompToComponent(comps);
+		LOG.info("taskPriority: {}", taskPriority);
+
+		while (true) {
+			for (Entry<Integer, List<ExecutorDetails>> entry : taskPriority
+					.entrySet()) {
+				if (entry.getValue().isEmpty() != true) {
+					for (Iterator<ExecutorDetails> it = entry.getValue().iterator(); it
+							.hasNext();) {
+						ExecutorDetails exec = it.next(); 
+						LOG.info("\n\nAttempting to schedule: {}", exec);
+						Node n = this.getNode(exec);
+						if (n != null) {
+							if (taskToNodeMap.containsKey(n) == false) {
+								Collection<ExecutorDetails> newMap = new LinkedList<ExecutorDetails>();
+								taskToNodeMap.put(n, newMap);
+							}
+							taskToNodeMap.get(n).add(exec);
+							n.consumeResourcesforTask(exec, td.getId(),
+									this._globalResources);
+							scheduledTasks.add(exec);
+							LOG.info(
+									"TASK {} assigned to NODE {} -- AvailMem: {} AvailCPU: {}",
+									new Object[] { exec, n,
+											n.getAvailableMemoryResources(),
+											n.getAvailableCpuResources() });
+						} else {
+							LOG.error(
+									"Not Enough Resources to schedule Task {}",
+									exec);
+						}
 					}
-					taskToNodeMap.get(n).add(exec);
-					n.consumeResourcesforTask(exec, td.getId(),
-							this._globalResources);
-					scheduledTasks.add(exec);
-					LOG.info(
-							"TASK {} assigned to NODE {} -- AvailMem: {} AvailCPU: {}",
-							new Object[] { exec, n,
-									n.getAvailableMemoryResources(),
-									n.getAvailableCpuResources() });
-				} else {
-					LOG.error("Not Enough Resources to schedule Task {}", exec);
 				}
 			}
 		}
 
+		// for(Component comp : comps) {
+		// LOG.info("Scheduling component: {}", comp.id);
+		// for(ExecutorDetails exec : comp.execs){
+		// LOG.info("\n\nAttempting to schedule: {}", exec);
+		// Node n = this.getNode(exec);
+		// if (n != null) {
+		// if (taskToNodeMap.containsKey(n) == false) {
+		// Collection<ExecutorDetails> newMap = new
+		// LinkedList<ExecutorDetails>();
+		// taskToNodeMap.put(n, newMap);
+		// }
+		// taskToNodeMap.get(n).add(exec);
+		// n.consumeResourcesforTask(exec, td.getId(),
+		// this._globalResources);
+		// scheduledTasks.add(exec);
+		// LOG.info(
+		// "TASK {} assigned to NODE {} -- AvailMem: {} AvailCPU: {}",
+		// new Object[] { exec, n,
+		// n.getAvailableMemoryResources(),
+		// n.getAvailableCpuResources() });
+		// } else {
+		// LOG.error("Not Enough Resources to schedule Task {}", exec);
+		// }
+		// }
+		// }
+
 		Collection<ExecutorDetails> tasksNotScheduled = new ArrayList<ExecutorDetails>(
 				unassignedExecutors);
 		tasksNotScheduled.removeAll(scheduledTasks);
-		//schedule left over system tasks
-		for(ExecutorDetails exec : tasksNotScheduled) {
+		// schedule left over system tasks
+		for (ExecutorDetails exec : tasksNotScheduled) {
 			Node n = this.getBestNode(exec);
 			if (n != null) {
 				if (taskToNodeMap.containsKey(n) == false) {
@@ -126,8 +175,7 @@ public class ResourceAwareStrategy implements IStrategy {
 			}
 		}
 
-		tasksNotScheduled  = new ArrayList<ExecutorDetails>(
-				unassignedExecutors);
+		tasksNotScheduled = new ArrayList<ExecutorDetails>(unassignedExecutors);
 		tasksNotScheduled.removeAll(scheduledTasks);
 		if (tasksNotScheduled.size() > 0) {
 			LOG.error("Resources not successfully scheduled: {}",
@@ -143,95 +191,108 @@ public class ResourceAwareStrategy implements IStrategy {
 
 		return taskToNodeMap;
 	}
-	
+
 	public String getBestCluster() {
-		String bestCluster=null;
-		Double mostRes=0.0;
-		for (Entry<String, List<String>> cluster : this._globalState.clusteringInfo.entrySet()) {
+		String bestCluster = null;
+		Double mostRes = 0.0;
+		for (Entry<String, List<String>> cluster : this._globalState.clusteringInfo
+				.entrySet()) {
 			Double clusterTotalRes = getTotalClusterRes(cluster.getValue());
-			if(clusterTotalRes > mostRes) {
+			if (clusterTotalRes > mostRes) {
 				mostRes = clusterTotalRes;
 				bestCluster = cluster.getKey();
 			}
 		}
 		return bestCluster;
 	}
-	
+
 	public Double getTotalClusterRes(List<String> cluster) {
 		Double res = 0.0;
-		for(String node : cluster) {
+		for (String node : cluster) {
 			LOG.info("node: {}", node);
-			res += this._globalState.nodes.get(this.NodeHostnameToId(node)).getAvailableMemoryResources() + this._globalState.nodes.get(this.NodeHostnameToId(node)).getAvailableMemoryResources();
+			res += this._globalState.nodes.get(this.NodeHostnameToId(node))
+					.getAvailableMemoryResources()
+					+ this._globalState.nodes.get(this.NodeHostnameToId(node))
+							.getAvailableMemoryResources();
 		}
 		return res;
 	}
 
 	public Node getNode(ExecutorDetails exec) {
-		//first scheduling
-		Node n=null;
-		if(this.refNode==null) {
+		// first scheduling
+		Node n = null;
+		if (this.refNode == null) {
 			String clus = this.getBestCluster();
 			n = this.getBestNodeInCluster_Mem_CPU(clus, exec);
 			this.refNode = n;
 			LOG.info("refNode: {}", this.refNode.hostname);
 		} else {
-			n =this.getBestNode(exec);
+			n = this.getBestNode(exec);
 		}
-		
+
 		return n;
 	}
-	
-	public Node getBestNode (ExecutorDetails exec) {
-		Double taskMem = this._globalResources.getTotalMemReqTask(this._topo.getId(), exec);
-		Double taskCPU = this._globalResources.getTotalCpuReqTask(this._topo.getId(), exec);
+
+	public Node getBestNode(ExecutorDetails exec) {
+		Double taskMem = this._globalResources.getTotalMemReqTask(
+				this._topo.getId(), exec);
+		Double taskCPU = this._globalResources.getTotalCpuReqTask(
+				this._topo.getId(), exec);
 		Double shortestDistance = Double.POSITIVE_INFINITY;
 		Node closestNode = null;
-		for(Node n : this._availNodes) {
-			//hard constraint
-			if(n.getAvailableMemoryResources() >= taskMem && n.getAvailableCpuResources()>=taskCPU) {
-				Double a = Math.pow((taskCPU-n.getAvailableCpuResources()) * this.CPU_WEIGHT, 2);
-				Double b = Math.pow((taskMem-n.getAvailableMemoryResources()) * this.MEM_WEIGHT, 2);
-				Double c = Math.pow(this.distToNode(this.refNode, n) * this.NETWORK_WEIGHT, 2);
-				Double distance = Math.sqrt(a + b +c );
-				if(shortestDistance > distance) {
+		for (Node n : this._availNodes) {
+			// hard constraint
+			if (n.getAvailableMemoryResources() >= taskMem
+					&& n.getAvailableCpuResources() >= taskCPU) {
+				Double a = Math.pow((taskCPU - n.getAvailableCpuResources())
+						* this.CPU_WEIGHT, 2);
+				Double b = Math.pow((taskMem - n.getAvailableMemoryResources())
+						* this.MEM_WEIGHT, 2);
+				Double c = Math.pow(this.distToNode(this.refNode, n)
+						* this.NETWORK_WEIGHT, 2);
+				Double distance = Math.sqrt(a + b + c);
+				if (shortestDistance > distance) {
 					shortestDistance = distance;
 					closestNode = n;
 				}
 			}
 		}
-		return closestNode; 
+		return closestNode;
 	}
-	
-	
+
 	Double distToNode(Node src, Node dest) {
-		if(this.NodeToCluster(src)==this.NodeToCluster(dest)) {
-			return 1.0 ;
+		if (this.NodeToCluster(src) == this.NodeToCluster(dest)) {
+			return 1.0;
 		} else {
-			return 2.0 ;
+			return 2.0;
 		}
 	}
-	
+
 	public String NodeToCluster(Node src) {
-		for(Entry<String, List<String>> entry : this._globalState.clusteringInfo.entrySet()) {
-			if(entry.getValue().contains(src.hostname)) {
+		for (Entry<String, List<String>> entry : this._globalState.clusteringInfo
+				.entrySet()) {
+			if (entry.getValue().contains(src.hostname)) {
 				return entry.getKey();
 			}
 		}
 		LOG.error("Node: {} not found in any clusters", src.hostname);
 		return null;
 	}
-	
+
 	public List<Node> getNodesFromCluster(String clus) {
 		List<Node> retList = new ArrayList<Node>();
-		for(String node_id : this._globalState.clusteringInfo.get(clus)) {
-			retList.add(this._globalState.nodes.get(this.NodeHostnameToId(node_id)));
+		for (String node_id : this._globalState.clusteringInfo.get(clus)) {
+			retList.add(this._globalState.nodes.get(this
+					.NodeHostnameToId(node_id)));
 		}
 		return retList;
 	}
-	
+
 	public Node getBestNodeInCluster_Mem_CPU(String clus, ExecutorDetails exec) {
-		Double taskMem = this._globalResources.getTotalMemReqTask(this._topo.getId(), exec);
-		Double taskCPU = this._globalResources.getTotalCpuReqTask(this._topo.getId(), exec);
+		Double taskMem = this._globalResources.getTotalMemReqTask(
+				this._topo.getId(), exec);
+		Double taskCPU = this._globalResources.getTotalCpuReqTask(
+				this._topo.getId(), exec);
 		Collection<Node> NodeMap = this.getNodesFromCluster(clus);
 		Double shortestDistance = Double.POSITIVE_INFINITY;
 		String msg = "";
@@ -271,17 +332,16 @@ public class ResourceAwareStrategy implements IStrategy {
 	protected Collection<Node> getAvaiNodes() {
 		return this._globalState.nodes.values();
 	}
-	
+
 	public Queue<Component> bfs(Component root) {
 		// Since queue is a interface
-		Queue<Component> retList = new LinkedList<Component>(); 
+		Queue<Component> retList = new LinkedList<Component>();
 		HashMap<String, Component> visited = new HashMap<String, Component>();
 		Queue<Component> queue = new LinkedList<Component>();
 
 		if (root == null)
 			return null;
 
-		
 		// Adds to end of queue
 		queue.add(root);
 		visited.put(root.id, root);
@@ -290,40 +350,42 @@ public class ResourceAwareStrategy implements IStrategy {
 		while (!queue.isEmpty()) {
 			// removes from front of queue
 			Component r = queue.remove();
-			
-			//System.out.print(r.getVertex() + "\t");
+
+			// System.out.print(r.getVertex() + "\t");
 
 			// Visit child first before grandchild
-			for(String comp : r.children) {
-				if(visited.containsKey(comp) == false) {
-					Component child = this._globalState.components.get(this._topo.getId()).get(comp);
+			for (String comp : r.children) {
+				if (visited.containsKey(comp) == false) {
+					Component child = this._globalState.components.get(
+							this._topo.getId()).get(comp);
 					queue.add(child);
 					visited.put(child.id, child);
 					retList.add(child);
 				}
 			}
-	
+
 		}
 		return retList;
 	}
-	
+
 	public Component getSpout() {
-		for(Component c : this._globalState.components.get(this._topo.getId()).values()) {
-			if(c.type==Component.ComponentType.SPOUT) {
+		for (Component c : this._globalState.components.get(this._topo.getId())
+				.values()) {
+			if (c.type == Component.ComponentType.SPOUT) {
 				return c;
 			}
 		}
 		return null;
 	}
-	
+
 	public String NodeHostnameToId(String hostname) {
-		for(Node n : this._globalState.nodes.values()) {
-			if(n.hostname.equals(hostname) == true) {
+		for (Node n : this._globalState.nodes.values()) {
+			if (n.hostname.equals(hostname) == true) {
 				return n.supervisor_id;
 			}
 		}
 		LOG.error("Cannot find Node with hostname {}", hostname);
 		return null;
 	}
-	
+
 }

@@ -25,26 +25,19 @@ public class EvenScheduler implements IScheduler{
 	@Override
 	public void schedule(Topologies topologies, Cluster cluster) {
 		LOG.info("\n\n\nRerunning EvenScheduler...");
-		GetStats gs = GetStats.getInstance("EvenScheduler");
-		gs.getStatistics();
-		/**
-		 * Get Global info
-		 */
-		GlobalResources globalResources = new GlobalResources(cluster, topologies);
-		GlobalState globalState = GlobalState.getInstance("EvenScheduler");
-		globalState.updateInfo(cluster, topologies, globalResources);
-		globalState.storeState(cluster, topologies);
-		LOG.info("Global State:\n{}", globalState);
-
 		for (TopologyDetails topo : topologies.getTopologies()) {
 			LOG.info("ID: {} NAME: {}", topo.getId(), topo.getName());
 			LOG.info("Unassigned Executors for {}: ", topo.getName());
 			LOG.info("Current Assignment: {}", HelperFuncs.nodeToTask(cluster, topo.getId()));
-
-			globalState.logTopologyInfo(topo);
 		}
-
-		//Master server = Master.getInstance();
+		GetStats gs = GetStats.getInstance("EvenScheduler");
+		GetTopologyInfo gt = new GetTopologyInfo();
+		gs.getStatistics();
+		for(TopologyDetails topo : topologies.getTopologies()) {
+			gt.getTopologyInfo(topo.getId());
+			LOG.info("Topology layout: {}", gt.all_comp);
+		}
+		
 		
 		LOG.info("running EvenScheduler now...");
 		new backtype.storm.scheduler.EvenScheduler().schedule(topologies, cluster);
