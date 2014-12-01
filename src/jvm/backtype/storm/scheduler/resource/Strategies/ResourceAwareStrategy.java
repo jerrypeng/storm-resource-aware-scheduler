@@ -187,11 +187,11 @@ public class ResourceAwareStrategy implements IStrategy {
 	
 	public String NodeToCluster(Node src) {
 		for(Entry<String, List<String>> entry : this._globalState.clusteringInfo.entrySet()) {
-			if(entry.getValue().contains(src.getId())) {
+			if(entry.getValue().contains(src.hostname)) {
 				return entry.getKey();
 			}
 		}
-		LOG.error("Node: {} not found in any clusters", src.getId());
+		LOG.error("Node: {} not found in any clusters", src.hostname);
 		return null;
 	}
 	
