@@ -28,12 +28,12 @@ public class ResourceAwareScheduler implements IScheduler {
 	public void schedule(Topologies topologies, Cluster cluster) {
 		LOG.info("\n\n\nRerunning ResourceAwareScheduler...");
 
-		for(TopologyDetails topo : topologies.getTopologies()) {
-			LOG.info("topo {} unassign executors: {}", topo.getId(), cluster.getUnassignedExecutors(topo));
-		}
-		GlobalResources globalResources = new GlobalResources(cluster, topologies);
+		
 		GlobalState globalState = GlobalState.getInstance("ResourceAwareScheduer");
 		globalState.updateInfo(cluster, topologies, globalResources);
+		
+		GlobalResources globalResources = new GlobalResources(cluster, topologies);
+		
 		LOG.info("GlobalState:\n{}", globalState);
 		Map<String, Node> nodeIdToNode = Node.getAllNodesFrom(cluster,
 				globalResources);

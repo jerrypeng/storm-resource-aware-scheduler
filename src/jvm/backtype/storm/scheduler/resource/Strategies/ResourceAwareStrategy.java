@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import backtype.storm.scheduler.Cluster;
 import backtype.storm.scheduler.ExecutorDetails;
+import backtype.storm.scheduler.Globals;
 import backtype.storm.scheduler.Topologies;
 import backtype.storm.scheduler.TopologyDetails;
 import backtype.storm.scheduler.resource.Component;
@@ -63,6 +64,8 @@ public class ResourceAwareStrategy implements IStrategy {
 			LOG.warn("No available nodes to schedule tasks on!");
 			return null;
 		}
+		
+		//this.checkResourceSet(td, exec);
 
 		Map<Node, Collection<ExecutorDetails>> taskToNodeMap = new HashMap<Node, Collection<ExecutorDetails>>();
 		LOG.debug("ExecutorsNeedScheduling: {}", unassignedExecutors);
@@ -312,5 +315,31 @@ public class ResourceAwareStrategy implements IStrategy {
 			}
 		}
 		return null;
+	}
+	public void checkResourceSet(TopologyDetails td, ExecutorDetails exec) {
+		if (!this._globalResources.hasExecInTopo(td.getId(), exec)) {
+			
+			if (td.getExecutorToComponent().get(exec)
+					.compareTo("__acker") == 0) {
+				LOG.warn(
+						"Scheduling __acker {} with memory requirement as {} - {} and {} - {} and CPU requirement as {}-{}",
+						new Object[] {
+								exec,
+								Globals.TYPE_MEMORY_ONHEAP,
+								Globals.DEFAULT_ONHEAP_MEMORY_REQUIREMENT,
+								Globals.TYPE_MEMORY_OFFHEAP,
+								Globals.DEFAULT_OFFHEAP_MEMORY_REQUIREMENT,
+								Globals.TYPE_CPU_TOTAL,
+								Globals.DEFAULT_CPU_REQUIREMENT });
+				this._globalResources.addExecutorResourceReqDefault(
+						exec, td.getId());
+			} else {
+				LOG.warn(
+						"Executor {} of Component: {} does not have a set memory resource requirement!",
+						exec, td.getExecutorToComponent().get(exec));
+				this._globalResources.addExecutorResourceReqDefault(
+						exec, td.getId());
+			}
+		}
 	}
 }
