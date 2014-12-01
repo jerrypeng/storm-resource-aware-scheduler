@@ -294,7 +294,6 @@ public class Node {
 
   public static Map<String, Node> getAllNodesFrom(Cluster cluster, GlobalResources globalResources) {
     Map<String, Node> nodeIdToNode = new HashMap<String, Node>();
-    Map<String, Node> hostnameToNode = new HashMap<String, Node>();
     for (SupervisorDetails sup : cluster.getSupervisors().values()) {
       //Node ID and supervisor ID are the same.
       String id = sup.getId();
@@ -302,7 +301,6 @@ public class Node {
       LOG.info("Found a {} Node {} {}", 
           new Object[] {isAlive? "living":"dead", id, sup.getAllPorts()});
       nodeIdToNode.put(sup.getId(), new Node(id, sup.getAllPorts(), isAlive, sup));
-      hostnameToNode.put(sup.getHost(), new Node(id, sup.getAllPorts(), isAlive, sup));
     }
 
     for (Entry<String, SchedulerAssignment> entry : cluster.getAssignments().entrySet()) {
@@ -330,7 +328,7 @@ public class Node {
       Node.updateAvailableResources(cluster,globalResources, nodeIdToNode);
     }
 
-    return hostnameToNode;
+    return nodeIdToNode;
   }
 
   /**

@@ -161,7 +161,7 @@ public class ResourceAwareStrategy implements IStrategy {
 		Double res = 0.0;
 		for(String node : cluster) {
 			LOG.info("node: {}", node);
-			res += this._globalState.nodes.get(node).getAvailableMemoryResources() + this._globalState.nodes.get(node).getAvailableMemoryResources();
+			res += this._globalState.nodes.get(this.NodeHostnameToId(node)).getAvailableMemoryResources() + this._globalState.nodes.get(this.NodeHostnameToId(node)).getAvailableMemoryResources();
 		}
 		return res;
 	}
@@ -313,6 +313,16 @@ public class ResourceAwareStrategy implements IStrategy {
 				return c;
 			}
 		}
+		return null;
+	}
+	
+	public String NodeHostnameToId(String hostname) {
+		for(Node n : this._globalState.nodes.values()) {
+			if(n.hostname.equals(hostname) == true) {
+				return n.supervisor_id;
+			}
+		}
+		LOG.error("Cannot find Node with hostname {}", hostname);
 		return null;
 	}
 	
