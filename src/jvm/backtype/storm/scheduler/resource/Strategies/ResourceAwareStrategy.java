@@ -91,38 +91,38 @@ public class ResourceAwareStrategy implements IStrategy {
 				.getCompToComponent(comps);
 		LOG.info("taskPriority: {}", taskPriority);
 
-		while (true) {
-			for (Entry<Integer, List<ExecutorDetails>> entry : taskPriority
-					.entrySet()) {
-				if (entry.getValue().isEmpty() != true) {
-					for (Iterator<ExecutorDetails> it = entry.getValue().iterator(); it
-							.hasNext();) {
-						ExecutorDetails exec = it.next(); 
-						LOG.info("\n\nAttempting to schedule: {}", exec);
-						Node n = this.getNode(exec);
-						if (n != null) {
-							if (taskToNodeMap.containsKey(n) == false) {
-								Collection<ExecutorDetails> newMap = new LinkedList<ExecutorDetails>();
-								taskToNodeMap.put(n, newMap);
-							}
-							taskToNodeMap.get(n).add(exec);
-							n.consumeResourcesforTask(exec, td.getId(),
-									this._globalResources);
-							scheduledTasks.add(exec);
-							LOG.info(
-									"TASK {} assigned to NODE {} -- AvailMem: {} AvailCPU: {}",
-									new Object[] { exec, n,
-											n.getAvailableMemoryResources(),
-											n.getAvailableCpuResources() });
-						} else {
-							LOG.error(
-									"Not Enough Resources to schedule Task {}",
-									exec);
-						}
-					}
-				}
-			}
-		}
+//		while (true) {
+//			for (Entry<Integer, List<ExecutorDetails>> entry : taskPriority
+//					.entrySet()) {
+//				if (entry.getValue().isEmpty() != true) {
+//					for (Iterator<ExecutorDetails> it = entry.getValue().iterator(); it
+//							.hasNext();) {
+//						ExecutorDetails exec = it.next(); 
+//						LOG.info("\n\nAttempting to schedule: {}", exec);
+//						Node n = this.getNode(exec);
+//						if (n != null) {
+//							if (taskToNodeMap.containsKey(n) == false) {
+//								Collection<ExecutorDetails> newMap = new LinkedList<ExecutorDetails>();
+//								taskToNodeMap.put(n, newMap);
+//							}
+//							taskToNodeMap.get(n).add(exec);
+//							n.consumeResourcesforTask(exec, td.getId(),
+//									this._globalResources);
+//							scheduledTasks.add(exec);
+//							LOG.info(
+//									"TASK {} assigned to NODE {} -- AvailMem: {} AvailCPU: {}",
+//									new Object[] { exec, n,
+//											n.getAvailableMemoryResources(),
+//											n.getAvailableCpuResources() });
+//						} else {
+//							LOG.error(
+//									"Not Enough Resources to schedule Task {}",
+//									exec);
+//						}
+//					}
+//				}
+//			}
+//		}
 
 		// for(Component comp : comps) {
 		// LOG.info("Scheduling component: {}", comp.id);
