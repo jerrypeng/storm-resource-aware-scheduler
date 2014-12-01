@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import backtype.storm.scheduler.Cluster;
 import backtype.storm.scheduler.ExecutorDetails;
+import backtype.storm.scheduler.Globals;
 import backtype.storm.scheduler.SchedulerAssignment;
 import backtype.storm.scheduler.SupervisorDetails;
 import backtype.storm.scheduler.Topologies;
@@ -141,6 +142,7 @@ public class GlobalState {
 	public void updateInfo(Cluster cluster, Topologies topologies, GlobalResources globalResources) {
 		this.nodes = this.getNodes(cluster, globalResources);
 		this.components = this.getComponents(topologies);
+		this.checkResourceSet(topologies, globalResources, cluster);
 	}
 
 	private  Map<String, Map<String, Component>> getComponents(Topologies topologies) {
@@ -333,5 +335,37 @@ public class GlobalState {
 				this.log_scheduling_info.put(topo.getId(), true);
 			}
 		}
+	}
+	public void checkResourceSet(Topologies topologies, GlobalResources globalResources, Cluster cluster) {
+		for (TopologyDetails td : topologies.getTopologies()) {
+			LOG.info("cluster.getUnassignedExecutors(td): {}", cluster.getUnassignedExecutors(td));
+			for (ExecutorDetails exec : cluster.getUnassignedExecutors(td)) {
+				LOG.info("exec: {} comp: {}", exec, td.getExecutorToComponent().get(exec));
+				if (!globalResources.hasExecInTopo(td.getId(), exec)) {
+					
+					if (td.getExecutorToComponent().get(exec)
+							.compareTo("__acker") == 0) {
+						LOG.warn(
+								"Scheduling __acker {} with memory requirement as {} - {} and {} - {} and CPU requirement as {}-{}",
+								new Object[] {
+										exec,
+										Globals.TYPE_MEMORY_ONHEAP,
+										Globals.DEFAULT_ONHEAP_MEMORY_REQUIREMENT,
+										Globals.TYPE_MEMORY_OFFHEAP,
+										Globals.DEFAULT_OFFHEAP_MEMORY_REQUIREMENT,
+										Globals.TYPE_CPU_TOTAL,
+										Globals.DEFAULT_CPU_REQUIREMENT });
+						globalResources.addExecutorResourceReqDefault(
+								exec, td.getId());
+					} else {
+						LOG.warn(
+								"Executor {} of Component: {} does not have a set memory resource requirement!",
+								exec, td.getExecutorToComponent().get(exec));
+						globalResources.addExecutorResourceReqDefault(
+								exec, td.getId());
+					}
+				}
+			}
+	  }
 	}
 }
