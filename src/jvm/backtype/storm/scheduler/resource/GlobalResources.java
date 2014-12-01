@@ -48,7 +48,9 @@ public class GlobalResources {
 		this._globalResourceList = topologies.getGlobalResourceReqList();
 		for (TopologyDetails td : topologies.getTopologies()) {
 			for (ExecutorDetails exec : cluster.getUnassignedExecutors(td)) {
+				LOG.info("exec: {} comp: {}", exec, td.getExecutorToComponent().get(exec));
 				if (!this.hasExecInTopo(td.getId(), exec)) {
+					
 					if (td.getExecutorToComponent().get(exec)
 							.compareTo("__acker") == 0) {
 						LOG.warn(
