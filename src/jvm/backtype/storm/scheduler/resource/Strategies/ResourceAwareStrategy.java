@@ -23,7 +23,6 @@ import backtype.storm.scheduler.resource.GetStats;
 import backtype.storm.scheduler.resource.GlobalResources;
 import backtype.storm.scheduler.resource.GlobalState;
 import backtype.storm.scheduler.resource.Node;
-import bsh.This;
 
 public class ResourceAwareStrategy implements IStrategy {
 	protected Logger LOG = null;
