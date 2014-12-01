@@ -58,7 +58,6 @@ public class Node {
 
 	  if(isAlive) {
 		  this.sup = sup;
-		  LOG.info("sup-2: {}", sup);
 		  this.supervisor_id = sup.getId();
 		  this.availMemory = this.getTotalMemoryResources();
 		  this.availCPU = this.getTotalCpuResources();
