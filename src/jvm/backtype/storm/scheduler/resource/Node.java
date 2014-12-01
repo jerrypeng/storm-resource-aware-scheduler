@@ -305,7 +305,7 @@ public class Node {
         String id = ws.getNodeId();
         Node node = nodeIdToNode.get(id);
         if (node == null) {
-          LOG.debug("Found an assigned slot on a dead supervisor {} with executors {}",
+          LOG.info("Found an assigned slot on a dead supervisor {} with executors {}",
               ws, HelperFuncs.getExecutors(ws, cluster));
           node = new Node(id, null, false, null);
           nodeIdToNode.put(id, node);
