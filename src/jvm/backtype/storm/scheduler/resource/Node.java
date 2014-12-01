@@ -52,18 +52,23 @@ public class Node {
   public Node(String nodeId, Set<Integer> allPorts, boolean isAlive,
       SupervisorDetails sup) {
 	  this(nodeId, allPorts, isAlive);
-	  this.sup = sup;
-	  LOG.info("sup-2: {}", sup);
-	  this.supervisor_id = sup.getId();
-	  this.availMemory = this.getTotalMemoryResources();
-	  this.availCPU = this.getTotalCpuResources();
-	  this.hostname = this.sup.getHost();
 	  this.slots = new ArrayList<WorkerSlot>();
-	  this.slots.addAll(this._freeSlots);
 	  this.execs = new ArrayList<ExecutorDetails>();
 	  slot_to_exec = new HashMap<WorkerSlot, List<ExecutorDetails>>();
-	  for (WorkerSlot ws : this.slots) {
-		  slot_to_exec.put(ws, new ArrayList<ExecutorDetails>());
+
+	  if(isAlive) {
+		  this.sup = sup;
+		  LOG.info("sup-2: {}", sup);
+		  this.supervisor_id = sup.getId();
+		  this.availMemory = this.getTotalMemoryResources();
+		  this.availCPU = this.getTotalCpuResources();
+		  this.hostname = this.sup.getHost();
+		 
+		  this.slots.addAll(this._freeSlots);
+		 
+		  for (WorkerSlot ws : this.slots) {
+			  slot_to_exec.put(ws, new ArrayList<ExecutorDetails>());
+		  }
 	  }
 
   }
@@ -291,7 +296,6 @@ public class Node {
     Map<String, Node> nodeIdToNode = new HashMap<String, Node>();
     for (SupervisorDetails sup : cluster.getSupervisors().values()) {
       //Node ID and supervisor ID are the same.
-    	LOG.info("sup-1: {}", sup);
       String id = sup.getId();
       boolean isAlive = !cluster.isBlackListed(id);
       LOG.info("Found a {} Node {} {}", 
