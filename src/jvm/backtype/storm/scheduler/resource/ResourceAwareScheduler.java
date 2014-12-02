@@ -32,6 +32,8 @@ public class ResourceAwareScheduler implements IScheduler {
 		GlobalResources globalResources = new GlobalResources(cluster, topologies);
 		GlobalState globalState = GlobalState.getInstance("ResourceAwareScheduer");
 		globalState.updateInfo(cluster, topologies, globalResources);
+		GetStats gs = GetStats.getInstance("ResourceAwareScheduer");		
+		gs.getStatistics();
 		
 		resourceAwareScheduling(topologies, cluster, globalState, globalResources);
 		
@@ -41,10 +43,6 @@ public class ResourceAwareScheduler implements IScheduler {
 		HelperFuncs.printNodeResources(globalState.nodes);
 		
 		
-		
-		
-		
-	
 
 	}
 	
