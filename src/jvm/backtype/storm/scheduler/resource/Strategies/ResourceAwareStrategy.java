@@ -70,6 +70,15 @@ public class ResourceAwareStrategy implements IStrategy {
 		return retMap;
 	}
 
+	private boolean checkDone(TreeMap<Integer, List<ExecutorDetails>> taskPriority) {
+		for(Entry<Integer, List<ExecutorDetails>> i : taskPriority.entrySet()) {
+			if(i.getValue().isEmpty()== false) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
 	public Map<Node, Collection<ExecutorDetails>> schedule(TopologyDetails td,
 			Collection<ExecutorDetails> unassignedExecutors) {
 		if (this._availNodes.size() <= 0) {
@@ -91,38 +100,41 @@ public class ResourceAwareStrategy implements IStrategy {
 				.getCompToComponent(comps);
 		LOG.info("taskPriority: {}", taskPriority);
 
-//		while (true) {
-//			for (Entry<Integer, List<ExecutorDetails>> entry : taskPriority
-//					.entrySet()) {
-//				if (entry.getValue().isEmpty() != true) {
-//					for (Iterator<ExecutorDetails> it = entry.getValue().iterator(); it
-//							.hasNext();) {
-//						ExecutorDetails exec = it.next(); 
-//						LOG.info("\n\nAttempting to schedule: {}", exec);
-//						Node n = this.getNode(exec);
-//						if (n != null) {
-//							if (taskToNodeMap.containsKey(n) == false) {
-//								Collection<ExecutorDetails> newMap = new LinkedList<ExecutorDetails>();
-//								taskToNodeMap.put(n, newMap);
-//							}
-//							taskToNodeMap.get(n).add(exec);
-//							n.consumeResourcesforTask(exec, td.getId(),
-//									this._globalResources);
-//							scheduledTasks.add(exec);
-//							LOG.info(
-//									"TASK {} assigned to NODE {} -- AvailMem: {} AvailCPU: {}",
-//									new Object[] { exec, n,
-//											n.getAvailableMemoryResources(),
-//											n.getAvailableCpuResources() });
-//						} else {
-//							LOG.error(
-//									"Not Enough Resources to schedule Task {}",
-//									exec);
-//						}
-//					}
-//				}
-//			}
-//		}
+		while (checkDone(taskPriority)==true) {
+			
+			for (Entry<Integer, List<ExecutorDetails>> entry : taskPriority
+					.entrySet()) {
+				if (entry.getValue().isEmpty() != true) {
+					for (Iterator<ExecutorDetails> it = entry.getValue().iterator(); it
+							.hasNext();) {
+						ExecutorDetails exec = it.next(); 
+						LOG.info("\n\nAttempting to schedule: {} of component {} with rank {}", new Object[]{exec, this._topo.getExecutorToComponent().get(exec), entry.getKey()});
+						Node n = this.getNode(exec);
+						if (n != null) {
+							if (taskToNodeMap.containsKey(n) == false) {
+								Collection<ExecutorDetails> newMap = new LinkedList<ExecutorDetails>();
+								taskToNodeMap.put(n, newMap);
+							}
+							taskToNodeMap.get(n).add(exec);
+							n.consumeResourcesforTask(exec, td.getId(),
+									this._globalResources);
+							scheduledTasks.add(exec);
+							LOG.info(
+									"TASK {} assigned to NODE {} -- AvailMem: {} AvailCPU: {}",
+									new Object[] { exec, n,
+											n.getAvailableMemoryResources(),
+											n.getAvailableCpuResources() });
+						} else {
+							LOG.error(
+									"Not Enough Resources to schedule Task {}",
+									exec);
+						}
+						it.remove();
+						break;
+					}
+				}
+			}
+		}
 
 		// for(Component comp : comps) {
 		// LOG.info("Scheduling component: {}", comp.id);
