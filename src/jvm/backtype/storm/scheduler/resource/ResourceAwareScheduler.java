@@ -37,6 +37,8 @@ public class ResourceAwareScheduler implements IScheduler {
 		
 		resourceAwareScheduling(topologies, cluster, globalState, globalResources);
 		
+		globalState.storeState(cluster, topologies);
+		
 		LOG.info("GlobalState:\n{}", globalState);
 
 		LOG.info("GlobalResources: \n{}\n", globalResources);

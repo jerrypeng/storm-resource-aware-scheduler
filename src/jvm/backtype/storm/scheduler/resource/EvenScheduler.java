@@ -33,6 +33,7 @@ public class EvenScheduler implements IScheduler{
 		GetStats gs = GetStats.getInstance("EvenScheduler");
 		GetTopologyInfo gt = new GetTopologyInfo();
 		gs.getStatistics();
+		GlobalState globalState = GlobalState.getInstance("EvenScheduler");
 		for(TopologyDetails topo : topologies.getTopologies()) {
 			gt.getTopologyInfo(topo.getId());
 			LOG.info("Topology layout: {}", gt.all_comp);
@@ -41,5 +42,7 @@ public class EvenScheduler implements IScheduler{
 		
 		LOG.info("running EvenScheduler now...");
 		new backtype.storm.scheduler.EvenScheduler().schedule(topologies, cluster);
+		
+		globalState.storeSchedState(cluster, topologies);
 	}
 }
