@@ -1,0 +1,39 @@
+
+
+<!---Scheduling Change---!>
+->hostname: pc207.emulab.net Supervisor Id: 06d950d7-3b16-4212-a70c-79bfc4f9e000 Available CPU: 0.0 Available Memory: 19880.0
+->WorkerToExec: 
+-->6700 => [[16, 16], [8, 8], [9, 9], [2, 2]]
+-->6701 => []
+-->6703 => []
+-->6702 => []
+->hostname: pc202.emulab.net Supervisor Id: 72f83db3-4ca5-4bce-9f3b-33af6371e84f Available CPU: 20.0 Available Memory: 20180.0
+->WorkerToExec: 
+-->6701 => [[18, 18], [19, 19]]
+-->6700 => []
+-->6703 => []
+-->6702 => []
+->hostname: pc317.emulab.net Supervisor Id: ee0680ee-d4fa-48d0-a9c7-930c6349f97f Available CPU: 0.0 Available Memory: 19880.0
+->WorkerToExec: 
+-->6703 => [[7, 7], [10, 10], [14, 14], [1, 1]]
+-->6702 => []
+-->6701 => []
+-->6700 => []
+->hostname: pc256.emulab.net Supervisor Id: 8c6e8553-a231-4ed5-bc0b-02d13e8a70fa Available CPU: 0.0 Available Memory: 19880.0
+->WorkerToExec: 
+-->6703 => [[20, 20], [6, 6], [11, 11], [4, 4]]
+-->6702 => []
+-->6701 => []
+-->6700 => []
+->hostname: pc247.emulab.net Supervisor Id: 56f86e30-dc4b-4103-93ab-901661221158 Available CPU: 20.0 Available Memory: 20180.0
+->WorkerToExec: 
+-->6701 => [[13, 13], [15, 15]]
+-->6700 => []
+-->6703 => []
+-->6702 => []
+->hostname: pc203.emulab.net Supervisor Id: 76580866-dd0b-4b39-b25d-64ddfdfc02b4 Available CPU: 0.0 Available Memory: 19880.0
+->WorkerToExec: 
+-->6703 => [[17, 17], [5, 5], [12, 12], [3, 3]]
+-->6700 => []
+-->6702 => []
+-->6701 => []
