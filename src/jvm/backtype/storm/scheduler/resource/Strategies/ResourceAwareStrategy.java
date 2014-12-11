@@ -366,6 +366,9 @@ public class ResourceAwareStrategy implements IStrategy {
 			// System.out.print(r.getVertex() + "\t");
 
 			// Visit child first before grandchild
+			List<String> neighbors = new ArrayList<String>();
+			neighbors.addAll(r.children);
+			neighbors.addAll(r.parents);
 			for (String comp : r.children) {
 				if (visited.containsKey(comp) == false) {
 					Component child = this._globalState.components.get(
