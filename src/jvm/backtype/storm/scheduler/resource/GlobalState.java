@@ -123,7 +123,12 @@ public class GlobalState {
 		}
 		String data = "\n\n<!---Scheduling Change---!>\n";
 		for(Map.Entry<String, Map<WorkerSlot, List<ExecutorDetails>>> i : node_to_worker.entrySet()) {
-			data+="->hostname: "+this.nodes.get(i.getKey()).hostname+" Supervisor Id: "+i.getKey()+"\n";
+			data += "->hostname: " + this.nodes.get(i.getKey()).hostname
+					+ " Supervisor Id: " + i.getKey() + " Available CPU: "
+					+ this.nodes.get(i.getKey()).getAvailableCpuResources()
+					+ " Available Memory: "
+					+ this.nodes.get(i.getKey()).getAvailableMemoryResources()
+					+ "\n";
 			data+="->WorkerToExec: \n";
 			for(Map.Entry<WorkerSlot, List<ExecutorDetails>> entry : i.getValue().entrySet()) {
 				data+="-->"+entry.getKey().getPort()+ " => "+entry.getValue().toString()+"\n";
