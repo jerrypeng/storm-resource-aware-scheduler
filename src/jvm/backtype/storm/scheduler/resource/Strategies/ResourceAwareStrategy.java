@@ -369,7 +369,7 @@ public class ResourceAwareStrategy implements IStrategy {
 			List<String> neighbors = new ArrayList<String>();
 			neighbors.addAll(r.children);
 			neighbors.addAll(r.parents);
-			for (String comp : r.children) {
+			for (String comp : neighbors) {
 				if (visited.containsKey(comp) == false) {
 					Component child = this._globalState.components.get(
 							this._topo.getId()).get(comp);
