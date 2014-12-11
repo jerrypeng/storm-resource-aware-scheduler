@@ -36,6 +36,8 @@ public class EvenScheduler implements IScheduler{
 		GlobalResources globalResources = new GlobalResources(cluster, topologies);
 		GlobalState globalState = GlobalState.getInstance("EvenScheduler");
 		globalState.updateInfo(cluster, topologies, globalResources);
+		HelperFuncs.printNodeResources(globalState.nodes);
+		LOG.info("GlobalState:\n{}", globalState);
 		for(TopologyDetails topo : topologies.getTopologies()) {
 			gt.getTopologyInfo(topo.getId());
 			LOG.info("Topology layout: {}", gt.all_comp);
