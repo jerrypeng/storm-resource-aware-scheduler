@@ -1,4 +1,4 @@
-package backtype.storm.scheduler.Elasticity;
+package backtype.storm.scheduler.resource;
 
 import java.io.BufferedWriter;
 import java.io.File;
