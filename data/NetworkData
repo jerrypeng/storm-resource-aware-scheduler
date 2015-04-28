@@ -9,14 +9,20 @@
           "node-2.stormcluster.storm.emulab.net",
           "node-3.stormcluster.storm.emulab.net",
           "node-4.stormcluster.storm.emulab.net"
+          "node-5.stormcluster.storm.emulab.net",
+          "node-6.stormcluster.storm.emulab.net",
+          "node-7.stormcluster.storm.emulab.net",
         ]
       },
       {
         "cluster": "2",
         "nodes": [
-          "node-5.stormcluster.storm.emulab.net",
-          "node-6.stormcluster.storm.emulab.net",
-          "node-7.stormcluster.storm.emulab.net",
+          "node-8.stormcluster.storm.emulab.net",
+          "node-9.stormcluster.storm.emulab.net",
+          "node-10.stormcluster.storm.emulab.net",
+          "node-11.stormcluster.storm.emulab.net",
+          "node-12.stormcluster.storm.emulab.net",
+          "node-13.stormcluster.storm.emulab.net",
         ]
       }
     ]
