@@ -1,5 +1,6 @@
 package backtype.storm.scheduler.resource;
 
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -32,12 +33,18 @@ public class GlobalResources {
    */
   private static final Logger LOG = LoggerFactory.getLogger(GlobalResources.class);
   
+  private Cluster _cluster = null;
+  private Topologies _topologies = null;
+  
   /**
    * constructor of this class.
    * @param topologies a list of topologies.
    */
   public GlobalResources(Cluster cluster, Topologies topologies) {
     this.getGlobalResourceList(cluster, topologies);
+    
+    this._cluster = cluster;
+    this._topologies = topologies;
     
     if (_globalResourceList == null) {
       _globalResourceList = new HashMap<String, Map<ExecutorDetails, Map<String, Map<String, Double>>>>();
@@ -138,6 +145,11 @@ public class GlobalResources {
     LOG.info("cannot find {} - {}", topoId, exec);
     return null;
   }
+  
+  public Double getTotalMemReqComp(String topoId, String compId) {
+	  List<ExecutorDetails> execs = HelperFuncs.compToExecs(this._topologies.getById(topoId), compId);
+	  return this.getTotalMemReqTask(topoId, execs.get(0));
+  }
 
   /**
    * Gets the total memory resource list for a 
@@ -163,6 +175,11 @@ public class GlobalResources {
     }
     LOG.info("cannot find {} - {}", topoId, exec);
     return null;
+  }
+  
+  public Double getTotalCpuReqComp(String topoId, String compId) {
+	  List<ExecutorDetails> execs = HelperFuncs.compToExecs(this._topologies.getById(topoId), compId);
+	  return this.getTotalCpuReqTask(topoId, execs.get(0));
   }
 
   public Map<String,Map<String,Double>> getTaskResourceReqList(String topoId, ExecutorDetails exec) {

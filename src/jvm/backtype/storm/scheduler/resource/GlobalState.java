@@ -73,15 +73,15 @@ public class GlobalState {
 		return instance;
 	}
 	
-	public void storeState(Cluster cluster, Topologies topologies) {
-		this.storeSchedState(cluster, topologies);
+	public void storeState(Cluster cluster, Topologies topologies, GlobalResources globalResources) {
+		this.storeSchedState(cluster, topologies, globalResources);
 	}
 	
 	public boolean stateEmpty() {
 		return this.schedState.isEmpty();
 	}
 	
-	public void storeSchedState(Cluster cluster, Topologies topologies) {
+	public void storeSchedState(Cluster cluster, Topologies topologies, GlobalResources globalResources) {
 		HashMap<String, Map<WorkerSlot, List<ExecutorDetails>>> sched_state = new HashMap<String, Map<WorkerSlot, List<ExecutorDetails>>>();
 		for(TopologyDetails topo : topologies.getTopologies()) {
 			if(cluster.getAssignmentById(topo.getId())!=null) {
@@ -99,45 +99,84 @@ public class GlobalState {
 			}
 			
 		}
-		if(sched_state.hashCode()!=this.schedState.hashCode()) {
-			this.logSchedChange(sched_state);
+		for (Map.Entry<String, Map<WorkerSlot, List<ExecutorDetails>>> i : sched_state
+				.entrySet()) {
+			if (this.schedState.containsKey(i.getKey()) == false
+					|| i.getValue().hashCode() != this.schedState.get(
+							i.getKey()).hashCode()) {
+				this.logSchedChange(i.getValue(),
+						topologies.getById(i.getKey()), globalResources);
+			}
 		}
 		this.schedState = new HashMap<String, Map<WorkerSlot, List<ExecutorDetails>>>();
 		this.schedState.putAll(sched_state);
 	}
 	
-	public void logSchedChange(Map<String, Map<WorkerSlot, List<ExecutorDetails>>>sched_state) {
-		Map<String, Map<WorkerSlot, List<ExecutorDetails>>> node_to_worker =new HashMap<String, Map<WorkerSlot, List<ExecutorDetails>>>();
-		
-		for(Node n : this.nodes.values()) {
-			node_to_worker.put(n.supervisor_id, new HashMap<WorkerSlot, List<ExecutorDetails>>());
-			for(WorkerSlot ws : n.slots) {
-				node_to_worker.get(n.supervisor_id).put(ws, new ArrayList<ExecutorDetails>());
+	public void logSchedChange(
+			Map<WorkerSlot, List<ExecutorDetails>> sched_state,
+			TopologyDetails topo, GlobalResources globalResources) {
+		Map<String, Map<WorkerSlot, List<ExecutorDetails>>> node_to_worker = new HashMap<String, Map<WorkerSlot, List<ExecutorDetails>>>();
+		for (Node n : this.nodes.values()) {
+			node_to_worker.put(n.supervisor_id,
+					new HashMap<WorkerSlot, List<ExecutorDetails>>());
+			for (WorkerSlot ws : n.slots) {
+				node_to_worker.get(n.supervisor_id).put(ws,
+						new ArrayList<ExecutorDetails>());
 			}
 		}
-		
-		for(Map.Entry<String, Map<WorkerSlot, List<ExecutorDetails>>> i : sched_state.entrySet()) {
-			for(Map.Entry<WorkerSlot, List<ExecutorDetails>> k : i.getValue().entrySet()) {
-				node_to_worker.get(k.getKey().getNodeId()).get(k.getKey()).addAll(k.getValue());
-			}
+
+		for (Map.Entry<WorkerSlot, List<ExecutorDetails>> k : sched_state
+				.entrySet()) {
+			node_to_worker.get(k.getKey().getNodeId()).get(k.getKey())
+					.addAll(k.getValue());
 		}
+
 		String data = "\n\n<!---Scheduling Change---!>\n";
-		for(Map.Entry<String, Map<WorkerSlot, List<ExecutorDetails>>> i : node_to_worker.entrySet()) {
+		for (Map.Entry<String, Map<WorkerSlot, List<ExecutorDetails>>> i : node_to_worker
+				.entrySet()) {
 			data += "->hostname: " + this.nodes.get(i.getKey()).hostname
-					+ " Supervisor Id: " + i.getKey() + " Available CPU: "
-					+ this.nodes.get(i.getKey()).getAvailableCpuResources()
-					+ " Available Memory: "
-					+ this.nodes.get(i.getKey()).getAvailableMemoryResources()
-					+ "\n";
-			data+="->WorkerToExec: \n";
-			for(Map.Entry<WorkerSlot, List<ExecutorDetails>> entry : i.getValue().entrySet()) {
-				data+="-->"+entry.getKey().getPort()+ " => "+entry.getValue().toString()+"\n";
+					+ " Supervisor Id: " + i.getKey() + "\n";
+			data += "->WorkerToExec: \n";
+			TreeMap<String, Integer> componentOnNodeCount = new TreeMap<String, Integer>();
+			for (Map.Entry<WorkerSlot, List<ExecutorDetails>> entry : i
+					.getValue().entrySet()) {
+				data += "-->" + entry.getKey().getPort() + " => "
+						+ entry.getValue().toString() + "\n";
+
+				
+				TreeMap<String, Integer> count = new TreeMap<String, Integer>();
+				for (ExecutorDetails ex : entry.getValue()) {
+					String comp = topo.getExecutorToComponent().get(ex);
+					// Per Node component count
+					if (componentOnNodeCount.containsKey(comp) == false) {
+						componentOnNodeCount.put(comp, 0);
+					}
+					componentOnNodeCount.put(comp,
+							componentOnNodeCount.get(comp) + 1);
+					// Per Slot component count
+					if (count.containsKey(comp) == false) {
+						count.put(comp, 0);
+					}
+					count.put(comp, count.get(comp) + 1);
+				}
+				
+				for(Map.Entry<String, Integer> c : count.entrySet()) {
+					data+="{"+c.getKey()
+							+"[CPU:"+globalResources.getTotalCpuReqComp(topo.getId(), c.getKey())
+							+"&Mem:"+globalResources.getTotalMemReqComp(topo.getId(), c.getKey())+"]-"+c.getValue()+"}";
+				}
+//				if (count.size() > 0) {
+//					data += "        =>" + count.toString() + "\n";
+//				}
+
 			}
-			
+			data += "->Overall Component Count:"
+					+ componentOnNodeCount.toString() + "\n\n";
+
 		}
-		
+
 		HelperFuncs.writeToFile(this.scheduling_log, data);
-		
+
 	}
 	
 	public void clearStoreState() {

@@ -47,6 +47,6 @@ public class EvenScheduler implements IScheduler{
 		LOG.info("running EvenScheduler now...");
 		new backtype.storm.scheduler.EvenScheduler().schedule(topologies, cluster);
 		
-		globalState.storeSchedState(cluster, topologies);
+		globalState.storeSchedState(cluster, topologies, globalResources);
 	}
 }
