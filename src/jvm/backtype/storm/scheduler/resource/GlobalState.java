@@ -130,12 +130,12 @@ public class GlobalState {
 			node_to_worker.get(k.getKey().getNodeId()).get(k.getKey())
 					.addAll(k.getValue());
 		}
-
+		
 		String data = "\n\n<!---Scheduling Change---!>\n";
 		for (Map.Entry<String, Map<WorkerSlot, List<ExecutorDetails>>> i : node_to_worker
 				.entrySet()) {
 			data += "->hostname: " + this.nodes.get(i.getKey()).hostname
-					+ " Supervisor Id: " + i.getKey() + "\n";
+					+ " Supervisor Id: " + i.getKey() +"Cluster: "+HelperFuncs.nodeToCluster(this.nodes.get(i.getKey()).hostname, this.clusteringInfo) +"\n";
 			data += "->WorkerToExec: \n";
 			TreeMap<String, Integer> componentOnNodeCount = new TreeMap<String, Integer>();
 			for (Map.Entry<WorkerSlot, List<ExecutorDetails>> entry : i

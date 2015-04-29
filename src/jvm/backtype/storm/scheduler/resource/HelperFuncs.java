@@ -40,6 +40,17 @@ import org.slf4j.LoggerFactory;
 
 public class HelperFuncs {
   private static final Logger LOG = LoggerFactory.getLogger(HelperFuncs.class);
+  
+  public static String nodeToCluster(String hostname, Map<String, List<String>> clusterInfo) {
+	  for(Entry<String, List<String>> entry : clusterInfo.entrySet()) {
+		  for(String n : entry.getValue()){
+			  if(n.equals(hostname)==true) {
+				  return entry.getKey();
+			  }
+		  }
+	  }
+	  return null;
+  }
 
   public static void printMap(Map mp) {
     if (mp == null) {
