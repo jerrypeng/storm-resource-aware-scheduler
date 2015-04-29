@@ -135,7 +135,7 @@ public class GlobalState {
 		for (Map.Entry<String, Map<WorkerSlot, List<ExecutorDetails>>> i : node_to_worker
 				.entrySet()) {
 			data += "->hostname: " + this.nodes.get(i.getKey()).hostname
-					+ " Supervisor Id: " + i.getKey() +"Cluster: "+HelperFuncs.nodeToCluster(this.nodes.get(i.getKey()).hostname, this.clusteringInfo) +"\n";
+					+ " Supervisor Id: " + i.getKey() +" Cluster: "+HelperFuncs.nodeToCluster(this.nodes.get(i.getKey()).hostname, this.clusteringInfo) +"\n";
 			data += "->WorkerToExec: \n";
 			TreeMap<String, Integer> componentOnNodeCount = new TreeMap<String, Integer>();
 			for (Map.Entry<WorkerSlot, List<ExecutorDetails>> entry : i
@@ -163,7 +163,7 @@ public class GlobalState {
 				for(Map.Entry<String, Integer> c : count.entrySet()) {
 					data+="{"+c.getKey()
 							+"[CPU:"+globalResources.getTotalCpuReqComp(topo.getId(), c.getKey())
-							+"&Mem:"+globalResources.getTotalMemReqComp(topo.getId(), c.getKey())+"]-"+c.getValue()+"}";
+							+"&Mem:"+globalResources.getTotalMemReqComp(topo.getId(), c.getKey())+"]-"+c.getValue()+"}\n";
 				}
 //				if (count.size() > 0) {
 //					data += "        =>" + count.toString() + "\n";
