@@ -11,6 +11,7 @@ import backtype.storm.scheduler.ExecutorDetails;
 import backtype.storm.scheduler.IScheduler;
 import backtype.storm.scheduler.Topologies;
 import backtype.storm.scheduler.TopologyDetails;
+import backtype.storm.scheduler.resource.Strategies.LinkBasedStrategy;
 import backtype.storm.scheduler.resource.Strategies.ResourceAwareStrategy;
 
 public class LinkBasedScheduler implements IScheduler {
@@ -63,7 +64,7 @@ public class LinkBasedScheduler implements IScheduler {
 	        LOG.info("executors that need scheduling: {}",
 	            cluster.getUnassignedExecutors(td));
 	        
-	        ResourceAwareStrategy rs = new LinkBasedStrategy(globalState, globalResources, null, td, cluster, topos);
+	        LinkBasedStrategy rs = new LinkBasedStrategy(globalState, globalResources, null, td, cluster, topos);
 	        taskToNodesMap = rs.schedule(td,
 	            cluster.getUnassignedExecutors(td));
 	        
