@@ -200,6 +200,7 @@ public class ResourceAwareStrategy implements IStrategy {
 					taskToNodeMap.put(n, newMap);
 				}
 				taskToNodeMap.get(n).add(exec);
+				scheduledTasks.add(exec);
 			}
 			
 		}
