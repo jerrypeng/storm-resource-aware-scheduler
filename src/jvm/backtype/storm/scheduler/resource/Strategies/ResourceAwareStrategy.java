@@ -166,26 +166,44 @@ public class ResourceAwareStrategy implements IStrategy {
 				unassignedExecutors);
 		tasksNotScheduled.removeAll(scheduledTasks);
 		// schedule left over system tasks
+//		for (ExecutorDetails exec : tasksNotScheduled) {
+//			Node n = this.getBestNode(exec);
+//			if (n != null) {
+//				if (taskToNodeMap.containsKey(n) == false) {
+//					Collection<ExecutorDetails> newMap = new LinkedList<ExecutorDetails>();
+//					taskToNodeMap.put(n, newMap);
+//				}
+//				taskToNodeMap.get(n).add(exec);
+//				n.consumeResourcesforTask(exec, td.getId(),
+//						this._globalResources);
+//				scheduledTasks.add(exec);
+//				LOG.info(
+//						"TASK {} assigned to NODE {} -- AvailMem: {} AvailCPU: {}",
+//						new Object[] { exec, n,
+//								n.getAvailableMemoryResources(),
+//								n.getAvailableCpuResources() });
+//			} else {
+//				LOG.error("Not Enough Resources to schedule Task {}", exec);
+//			}
+//		}
+		
+		//round robin system tasks
+		Iterator it = this._availNodes.iterator();
 		for (ExecutorDetails exec : tasksNotScheduled) {
-			Node n = this.getBestNode(exec);
-			if (n != null) {
+			if(it.hasNext()==false) {
+				it = this._availNodes.iterator();
+			} 
+			if(it.hasNext()==true) {
+				Node n=(Node)it.next();
 				if (taskToNodeMap.containsKey(n) == false) {
 					Collection<ExecutorDetails> newMap = new LinkedList<ExecutorDetails>();
 					taskToNodeMap.put(n, newMap);
 				}
 				taskToNodeMap.get(n).add(exec);
-				n.consumeResourcesforTask(exec, td.getId(),
-						this._globalResources);
-				scheduledTasks.add(exec);
-				LOG.info(
-						"TASK {} assigned to NODE {} -- AvailMem: {} AvailCPU: {}",
-						new Object[] { exec, n,
-								n.getAvailableMemoryResources(),
-								n.getAvailableCpuResources() });
-			} else {
-				LOG.error("Not Enough Resources to schedule Task {}", exec);
 			}
+			
 		}
+		
 
 		tasksNotScheduled = new ArrayList<ExecutorDetails>(unassignedExecutors);
 		tasksNotScheduled.removeAll(scheduledTasks);
