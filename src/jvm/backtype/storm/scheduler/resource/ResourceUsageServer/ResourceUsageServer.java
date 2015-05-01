@@ -31,12 +31,6 @@ public class ResourceUsageServer {
 	public static ResourceUsageServer getInstance() {
 		if(instance==null) {
 			instance=new ResourceUsageServer();
-			try {
-				instance.start();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 		}
 		return instance;
 	}
