@@ -1,15 +1,19 @@
 package backtype.storm.scheduler.resource.ResourceUsageServer;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import backtype.storm.scheduler.resource.HelperFuncs;
 
 
 public class ResourceUsageServer {
@@ -58,8 +62,9 @@ class ServerThread implements Runnable{
 			socket = new ServerSocket(port, 10);
 			Socket connection;
 			while(true){
-				connection=socket.accept();
 				LOG.info("Waiting for connection...");
+				connection=socket.accept();
+				
 				LOG.info("Connection received from " + connection.getInetAddress().getHostName());
 				ServerWorker worker=new ServerWorker(connection);
 				worker.run();			
@@ -112,21 +117,28 @@ class ServerWorker implements Runnable{
 			prf.setBandwidth_in(bandwidth_in);
 			prf.setBandwidth_out(bandwidth_out);
 			prf.setCpu_usage(cpu);
+			 InetAddress addr = InetAddress.getByName(prf.ip);
+			  String host = addr.getHostName();
+			  Double cpu_usage=prf.getCpu_usage();
 			
 			ResourceUsageServer.profile_map.put(prf.ip, prf);
 			//print out information
-			System.out.println("host IP address: "+prf.ip);
-			System.out.println(prf.ip+"-Bandwidth_in: "+prf.getBandwidth_in());
-			System.out.println(prf.ip+"-Bandwidth_out: "+prf.getBandwidth_out());
-			System.out.println(prf.ip+"-cpu_usage: "+prf.getCpu_usage());
+			System.out.println("hostname: "+host+" IP address: "+prf.ip);
+			//System.out.println(prf.ip+"-Bandwidth_in: "+prf.getBandwidth_in());
+			//System.out.println(prf.ip+"-Bandwidth_out: "+prf.getBandwidth_out());
+			System.out.println(prf.ip+"-cpu_usage: "+cpu_usage);
+			
+			String data=host+","+cpu_usage;
+			
+			HelperFuncs.writeToFile(new File("/tmp/cpu_usage"), data);
 			
 			
 			ResourceUsageServer.profile_map.put(prf.ip, prf);
 			//print out information
-			LOG.info("host IP address: "+prf.ip);
-			LOG.info(prf.ip+"-Bandwidth_in: "+prf.getBandwidth_in());
-			LOG.info(prf.ip+"-Bandwidth_out: "+prf.getBandwidth_out());
-			LOG.info(prf.ip+"-cpu_usage: "+prf.getCpu_usage());
+//			LOG.info("host IP address: "+prf.ip);
+//			LOG.info(prf.ip+"-Bandwidth_in: "+prf.getBandwidth_in());
+//			LOG.info(prf.ip+"-Bandwidth_out: "+prf.getBandwidth_out());
+//			LOG.info(prf.ip+"-cpu_usage: "+prf.getCpu_usage());
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
