@@ -22,10 +22,12 @@ public class ResourceUsageServer {
 			.getLogger(ResourceUsageServer.class);
 	public static HashMap<String, Profile> profile_map;
 	private static ResourceUsageServer instance;
+	String schedulerType=null;
 	
-	private ResourceUsageServer(){
+	private ResourceUsageServer(String schedulerType){
+		this.schedulerType = schedulerType;
 		try {
-		File log = new File("/tmp/cpu_usage");
+		File log = new File("/tmp/"+this.schedulerType+"_cpu_usage");
 			
 
 			log.delete();
@@ -42,9 +44,9 @@ public class ResourceUsageServer {
 		}
 	}
 	
-	public static ResourceUsageServer getInstance() {
+	public static ResourceUsageServer getInstance(String schedulerType) {
 		if(instance==null) {
-			instance=new ResourceUsageServer();
+			instance=new ResourceUsageServer(schedulerType);
 		}
 		return instance;
 	}
@@ -52,7 +54,7 @@ public class ResourceUsageServer {
 	private void start() throws IOException{
 	//public static void start() throws IOException{
 		LOG.info("Cluster Stats Monitoring Server started...");
-		Thread t=new Thread(new ServerThread());
+		Thread t=new Thread(new ServerThread(this.schedulerType));
 		t.start();
 	}
 
@@ -62,6 +64,11 @@ class ServerThread implements Runnable{
 
 	private static final Logger LOG = LoggerFactory
 			.getLogger(ResourceUsageServer.class);
+	
+	String schedulerType = null;
+	public ServerThread(String schedulerType) {
+		this.schedulerType = schedulerType;
+	}
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
@@ -76,7 +83,7 @@ class ServerThread implements Runnable{
 				connection=socket.accept();
 				
 				//LOG.info("Connection received from " + connection.getInetAddress().getHostName());
-				ServerWorker worker=new ServerWorker(connection);
+				ServerWorker worker=new ServerWorker(connection, this.schedulerType);
 				worker.run();			
 			}
 		} catch (IOException e) {
@@ -94,14 +101,16 @@ class ServerWorker implements Runnable{
 	private Socket connection;
 	private ObjectInputStream in;
 	private ObjectOutputStream out;
+	String schedulerType=null;
 	private static final Logger LOG = LoggerFactory
 			.getLogger(ResourceUsageServer.class);
 
-	public ServerWorker(Socket connection) throws IOException {
+	public ServerWorker(Socket connection, String schedulerType) throws IOException {
 		// TODO Auto-generated constructor stub
 		this.connection=connection;
 		this.in=new ObjectInputStream(this.connection.getInputStream());
 		this.out=new ObjectOutputStream(this.connection.getOutputStream());
+		this.schedulerType = schedulerType;
 	}
 
 	@Override
@@ -140,7 +149,7 @@ class ServerWorker implements Runnable{
 			
 			String data=host+","+cpu_usage+"\n";
 			
-			HelperFuncs.writeToFile(new File("/tmp/cpu_usage"), data);
+			HelperFuncs.writeToFile(new File("/tmp/"+this.schedulerType+"_cpu_usage"), data);
 			
 			
 			ResourceUsageServer.profile_map.put(prf.ip, prf);

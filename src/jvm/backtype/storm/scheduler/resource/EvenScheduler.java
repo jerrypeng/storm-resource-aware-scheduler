@@ -32,7 +32,10 @@ public class EvenScheduler implements IScheduler{
 			LOG.info("Unassigned Executors for {}: ", topo.getName());
 			LOG.info("Current Assignment: {}", HelperFuncs.nodeToTask(cluster, topo.getId()));
 		}
-		ResourceUsageServer rs = ResourceUsageServer.getInstance();
+		
+		if(topologies.getTopologies().size()>0) {
+			ResourceUsageServer rs = ResourceUsageServer.getInstance("EvenScheduler");
+		}
 		
 		
 		GetStats gs = GetStats.getInstance("EvenScheduler");
