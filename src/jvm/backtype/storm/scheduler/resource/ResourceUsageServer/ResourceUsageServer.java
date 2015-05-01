@@ -24,6 +24,16 @@ public class ResourceUsageServer {
 	private static ResourceUsageServer instance;
 	
 	private ResourceUsageServer(){
+		try {
+		File log = new File("/tmp/cpu_usage");
+			
+
+			log.delete();
+		} catch (Exception e) {
+
+			e.printStackTrace();
+
+		}
 		profile_map = new HashMap<String, Profile>();
 		try{
 			this.start();
