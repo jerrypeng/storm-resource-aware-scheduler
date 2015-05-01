@@ -62,10 +62,10 @@ class ServerThread implements Runnable{
 			socket = new ServerSocket(port, 10);
 			Socket connection;
 			while(true){
-				LOG.info("Waiting for connection...");
+				//LOG.info("Waiting for connection...");
 				connection=socket.accept();
 				
-				LOG.info("Connection received from " + connection.getInetAddress().getHostName());
+				//LOG.info("Connection received from " + connection.getInetAddress().getHostName());
 				ServerWorker worker=new ServerWorker(connection);
 				worker.run();			
 			}
@@ -97,7 +97,7 @@ class ServerWorker implements Runnable{
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		System.out.println("master in run...");
+		//System.out.println("master in run...");
 		try {
 			this.out.flush();
 			
@@ -123,12 +123,12 @@ class ServerWorker implements Runnable{
 			
 			ResourceUsageServer.profile_map.put(prf.ip, prf);
 			//print out information
-			System.out.println("hostname: "+host+" IP address: "+prf.ip);
+			//System.out.println("hostname: "+host+" IP address: "+prf.ip);
 			//System.out.println(prf.ip+"-Bandwidth_in: "+prf.getBandwidth_in());
 			//System.out.println(prf.ip+"-Bandwidth_out: "+prf.getBandwidth_out());
-			System.out.println(prf.ip+"-cpu_usage: "+cpu_usage);
+			//System.out.println(prf.ip+"-cpu_usage: "+cpu_usage);
 			
-			String data=host+","+cpu_usage;
+			String data=host+","+cpu_usage+"\n";
 			
 			HelperFuncs.writeToFile(new File("/tmp/cpu_usage"), data);
 			
