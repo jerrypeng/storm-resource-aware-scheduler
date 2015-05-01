@@ -33,11 +33,8 @@ public class EvenScheduler implements IScheduler{
 			LOG.info("Current Assignment: {}", HelperFuncs.nodeToTask(cluster, topo.getId()));
 		}
 		ResourceUsageServer rs = ResourceUsageServer.getInstance();
-		try{
-			rs.start();
-		} catch(IOException ex) {
-			
-		}
+		
+		
 		GetStats gs = GetStats.getInstance("EvenScheduler");
 		GetTopologyInfo gt = new GetTopologyInfo();
 		gs.getStatistics();

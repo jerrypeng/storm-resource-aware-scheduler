@@ -31,11 +31,17 @@ public class ResourceUsageServer {
 	public static ResourceUsageServer getInstance() {
 		if(instance==null) {
 			instance=new ResourceUsageServer();
+			try {
+				instance.start();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		return instance;
 	}
 	
-	public void start() throws IOException{
+	private void start() throws IOException{
 	//public static void start() throws IOException{
 		LOG.info("Cluster Stats Monitoring Server started...");
 		Thread t=new Thread(new ServerThread());

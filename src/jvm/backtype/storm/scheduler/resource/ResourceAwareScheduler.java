@@ -31,11 +31,7 @@ public class ResourceAwareScheduler implements IScheduler {
 		LOG.info("\n\n\nRerunning ResourceAwareScheduler...");
 
 		ResourceUsageServer rs = ResourceUsageServer.getInstance();
-		try{
-			rs.start();
-		} catch(IOException ex) {
-			
-		}
+		t
 		GlobalResources globalResources = new GlobalResources(cluster, topologies);
 		GlobalState globalState = GlobalState.getInstance("ResourceAwareScheduler");
 		globalState.updateInfo(cluster, topologies, globalResources);
