@@ -11,6 +11,7 @@ import backtype.storm.scheduler.ExecutorDetails;
 import backtype.storm.scheduler.IScheduler;
 import backtype.storm.scheduler.Topologies;
 import backtype.storm.scheduler.TopologyDetails;
+import backtype.storm.scheduler.resource.ResourceUsageServer.ResourceUsageServer;
 import backtype.storm.scheduler.resource.Strategies.ResourceAwareStrategy;
 
 public class ResourceAwareScheduler implements IScheduler {
@@ -28,7 +29,8 @@ public class ResourceAwareScheduler implements IScheduler {
 	public void schedule(Topologies topologies, Cluster cluster) {
 		LOG.info("\n\n\nRerunning ResourceAwareScheduler...");
 
-		
+		ResourceUsageServer rs = ResourceUsageServer.getInstance();
+		rs.start();
 		GlobalResources globalResources = new GlobalResources(cluster, topologies);
 		GlobalState globalState = GlobalState.getInstance("ResourceAwareScheduler");
 		globalState.updateInfo(cluster, topologies, globalResources);
