@@ -147,7 +147,7 @@ class ServerWorker implements Runnable{
 			//System.out.println(prf.ip+"-Bandwidth_out: "+prf.getBandwidth_out());
 			//System.out.println(prf.ip+"-cpu_usage: "+cpu_usage);
 			
-			String data=host+","+cpu_usage+"\n";
+			String data=this.schedulerType+","+host+","+cpu_usage+"\n";
 			
 			HelperFuncs.writeToFile(new File("/tmp/"+this.schedulerType+"_cpu_usage"), data);
 			
