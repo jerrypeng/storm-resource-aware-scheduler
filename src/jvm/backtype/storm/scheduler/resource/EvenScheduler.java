@@ -1,5 +1,6 @@
 package backtype.storm.scheduler.resource;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import backtype.storm.scheduler.ExecutorDetails;
 import backtype.storm.scheduler.IScheduler;
 import backtype.storm.scheduler.Topologies;
 import backtype.storm.scheduler.TopologyDetails;
+import backtype.storm.scheduler.resource.ResourceUsageServer.ResourceUsageServer;
 
 public class EvenScheduler implements IScheduler{
 	private static final Logger LOG = LoggerFactory
@@ -29,6 +31,12 @@ public class EvenScheduler implements IScheduler{
 			LOG.info("ID: {} NAME: {}", topo.getId(), topo.getName());
 			LOG.info("Unassigned Executors for {}: ", topo.getName());
 			LOG.info("Current Assignment: {}", HelperFuncs.nodeToTask(cluster, topo.getId()));
+		}
+		ResourceUsageServer rs = ResourceUsageServer.getInstance();
+		try{
+			rs.start();
+		} catch(IOException ex) {
+			
 		}
 		GetStats gs = GetStats.getInstance("EvenScheduler");
 		GetTopologyInfo gt = new GetTopologyInfo();
