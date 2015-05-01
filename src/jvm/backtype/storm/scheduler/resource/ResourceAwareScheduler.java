@@ -1,5 +1,6 @@
 package backtype.storm.scheduler.resource;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -30,7 +31,11 @@ public class ResourceAwareScheduler implements IScheduler {
 		LOG.info("\n\n\nRerunning ResourceAwareScheduler...");
 
 		ResourceUsageServer rs = ResourceUsageServer.getInstance();
-		rs.start();
+		try{
+			rs.start();
+		} catch(IOException ex) {
+			
+		}
 		GlobalResources globalResources = new GlobalResources(cluster, topologies);
 		GlobalState globalState = GlobalState.getInstance("ResourceAwareScheduler");
 		globalState.updateInfo(cluster, topologies, globalResources);
