@@ -27,16 +27,16 @@ public class LinkBasedScheduler implements IScheduler {
 
 	@Override
 	public void schedule(Topologies topologies, Cluster cluster) {
-		LOG.info("\n\n\nRerunning ResourceAwareScheduler...");
+		LOG.info("\n\n\nRerunning LinkBasedScheduler...");
 
 		
 		GlobalResources globalResources = new GlobalResources(cluster, topologies);
-		GlobalState globalState = GlobalState.getInstance("ResourceAwareScheduler");
+		GlobalState globalState = GlobalState.getInstance("LinkBasedScheduler");
 		globalState.updateInfo(cluster, topologies, globalResources);
-		GetStats gs = GetStats.getInstance("ResourceAwareScheduler");		
+		GetStats gs = GetStats.getInstance("LinkBasedScheduler");		
 		gs.getStatistics();
 		
-		resourceAwareScheduling(topologies, cluster, globalState, globalResources);
+		linkBasedScheduling(topologies, cluster, globalState, globalResources);
 		
 		globalState.storeState(cluster, topologies, globalResources);
 		
@@ -49,7 +49,7 @@ public class LinkBasedScheduler implements IScheduler {
 
 	}
 	
-	public void resourceAwareScheduling(Topologies topos, Cluster cluster, GlobalState globalState, GlobalResources globalResources) {
+	public void linkBasedScheduling(Topologies topos, Cluster cluster, GlobalState globalState, GlobalResources globalResources) {
 	    for (TopologyDetails td : topos.getTopologies()) {
 	      String topId = td.getId();
 	      Map<Node, Collection<ExecutorDetails>> taskToNodesMap;

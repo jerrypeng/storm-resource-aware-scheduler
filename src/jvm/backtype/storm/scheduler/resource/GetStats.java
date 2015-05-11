@@ -442,7 +442,7 @@ public class GetStats {
 
 					long unixTime = (System.currentTimeMillis() / 1000)
 							- this.startTimes.get(topo.get_id());
-					String data = String.valueOf(unixTime) + ':' +this.sched_type+","+ output_bolts
+					String data = String.valueOf(unixTime) + ':' +this.sched_type+":"+ output_bolts
 							+ ":" + topo.get_id() + ":"
 							+ total_output_bolt_emit / num_output_bolt + "\n";
 					LOG.info(data);
