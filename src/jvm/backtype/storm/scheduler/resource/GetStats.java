@@ -171,15 +171,18 @@ public class GetStats {
 					int port = executorSummary.get_port();
 					String componentId = executorSummary.get_component_id();
 					String taskId = Integer.toString(executorSummary
-							.get_executor_info().get_task_start());
+							.get_executor_info().get_task_start())+Integer.toString(executorSummary
+									.get_executor_info().get_task_end());
 
 					// populating data structures
 					if (this.nodeStats.containsKey(host) == false) {
 						this.nodeStats.put(host, new NodeStats(host));
 					}
-					if (this.componentStats.containsKey(componentId) == false) {
-						this.componentStats.put(componentId,
-								new ComponentStats(componentId));
+					String componentHashId = this.getComponentHashId(componentId, topo);
+					
+					if (this.componentStats.containsKey(componentHashId) == false) {
+						this.componentStats.put(componentHashId,
+								new ComponentStats(componentHashId));
 					}
 					/*
 					 * if(this.location_stats.containsKey(host) == false) {
@@ -204,7 +207,7 @@ public class GetStats {
 						this.nodeStats.get(host).bolts_on_node
 								.add(executorSummary);
 						// getting parallelism hint
-						this.componentStats.get(componentId).parallelism_hint = stormTopo
+						this.componentStats.get(componentHashId).parallelism_hint = stormTopo
 								.get_bolts().get(componentId).get_common()
 								.get_parallelism_hint();
 					} else if (stormTopo.get_spouts().containsKey(componentId) == true) {
@@ -216,7 +219,7 @@ public class GetStats {
 						this.nodeStats.get(host).spouts_on_node
 								.add(executorSummary);
 						// getting parallelism hint
-						this.componentStats.get(componentId).parallelism_hint = stormTopo
+						this.componentStats.get(componentHashId).parallelism_hint = stormTopo
 								.get_spouts().get(componentId).get_common()
 								.get_parallelism_hint();
 					} else {
@@ -233,8 +236,9 @@ public class GetStats {
 					if (transfer.get(":all-time").get("default") != null
 							&& emit.get(":all-time").get("default") != null) {
 						// getting task hash
-						String hash_id = host + ':' + port + ':' + componentId
-								+ ":" + topo.get_id() + ":" + taskId;
+						String hash_id = this.getExecHashId(executorSummary, topo);
+						//String hash_id = host + ':' + port + ':' + componentId
+						//		+ ":" + topo.get_id() + ":" + taskId;
 						// getting total output
 						Integer totalTransferOutput = transfer.get(":all-time")
 								.get("default").intValue();
@@ -327,8 +331,8 @@ public class GetStats {
 						 * transfer_throughput);
 						 */
 
-						this.componentStats.get(componentId).total_transfer_throughput += transfer_throughput;
-						this.componentStats.get(componentId).total_emit_throughput += emit_throughput;
+						this.componentStats.get(componentHashId).total_transfer_throughput += transfer_throughput;
+						this.componentStats.get(componentHashId).total_emit_throughput += emit_throughput;
 
 						// write to file
 						long unixTime = (System.currentTimeMillis() / 1000)
@@ -412,29 +416,35 @@ public class GetStats {
 				String output_bolts = "";
 				for (Map.Entry<String, ComponentStats> cs : this.componentStats
 						.entrySet()) {
-					int avg_transfer_throughput = cs.getValue().total_transfer_throughput
-							/ cs.getValue().parallelism_hint;
-					int avg_emit_throughput = cs.getValue().total_emit_throughput
-							/ cs.getValue().parallelism_hint;
-					if (cs.getKey().matches(".*_output_.*")) {
-						LOG.info(
-								"Component: {}(output) total throughput (transfer): {} (emit): {} avg throughput (transfer): {} (emit): {}",
-								new Object[] { cs.getKey(), 
-										cs.getValue().total_transfer_throughput,
-										cs.getValue().total_emit_throughput,
-										avg_transfer_throughput,
-										avg_emit_throughput });
-						num_output_bolt++;
-						total_output_bolt_emit += cs.getValue().total_emit_throughput;
-						output_bolts += cs.getKey() + ",";
-					} else {
-						LOG.info(
-								"Component: {} total throughput (transfer): {} (emit): {} avg throughput (transfer): {} (emit): {}",
-								new Object[] { cs.getKey(), 
-										cs.getValue().total_transfer_throughput,
-										cs.getValue().total_emit_throughput,
-										avg_transfer_throughput,
-										avg_emit_throughput });
+					String[] tokens = cs.getKey().split(":");
+					String topo_id = tokens[0];
+					if(topo_id.equals(topo.get_id())==true) {
+						String componentId = tokens[1];
+						
+						int avg_transfer_throughput = cs.getValue().total_transfer_throughput
+								/ cs.getValue().parallelism_hint;
+						int avg_emit_throughput = cs.getValue().total_emit_throughput
+								/ cs.getValue().parallelism_hint;
+						if (componentId.matches(".*_output_.*")) {
+							LOG.info(
+									"Component: {}(output) total throughput (transfer): {} (emit): {} avg throughput (transfer): {} (emit): {}",
+									new Object[] { cs.getKey(), 
+											cs.getValue().total_transfer_throughput,
+											cs.getValue().total_emit_throughput,
+											avg_transfer_throughput,
+											avg_emit_throughput });
+							num_output_bolt++;
+							total_output_bolt_emit += cs.getValue().total_emit_throughput;
+							output_bolts += cs.getKey() + ",";
+						} else {
+							LOG.info(
+									"Component: {} total throughput (transfer): {} (emit): {} avg throughput (transfer): {} (emit): {}",
+									new Object[] { cs.getKey(), 
+											cs.getValue().total_transfer_throughput,
+											cs.getValue().total_emit_throughput,
+											avg_transfer_throughput,
+											avg_emit_throughput });
+						}
 					}
 				}
 				if (num_output_bolt > 0) {
@@ -464,6 +474,22 @@ public class GetStats {
 		} catch (TException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private String getExecHashId(ExecutorSummary executorSummary, TopologySummary topo) {
+		String host = executorSummary.get_host();
+		int port = executorSummary.get_port();
+		String componentId = executorSummary.get_component_id();
+		String taskId = Integer.toString(executorSummary
+				.get_executor_info().get_task_start())+":"+Integer.toString(executorSummary
+						.get_executor_info().get_task_end());
+		String hash_id = host + ':' + port + ':' + componentId
+				+ ":" + topo.get_id() + ":" + taskId;
+		return hash_id;
+	}
+	
+	private String getComponentHashId(String componentId, TopologySummary topo) {
+		return topo.get_id()+":"+componentId;
 	}
 
 }
