@@ -255,6 +255,8 @@ public class ResourceAwareStrategy implements IStrategy {
 		if (this.refNode == null) {
 			String clus = this.getBestCluster();
 			n = this.getBestNodeInCluster_Mem_CPU(clus, exec);
+			
+			LOG.info("Topology: {} Best Cluster: {} Ref Node: {}", new Object[]{this._topo.getId(), clus, n});
 			this.refNode = n;
 			LOG.info("refNode: {}", this.refNode.hostname);
 		} else {
